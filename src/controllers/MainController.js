@@ -254,14 +254,17 @@ export class MainController {
         const selectedVal = this.ui.categorySelect.value;
         let hoursToAdd = 0;
 
-        // ✅ 架構優化：修復 this.selecteditem 大小寫錯誤
         if (selectedVal === 'custom') {
             this.ui.toggleCustomCategoryUI(true); 
             hoursToAdd = parseInt(this.ui.customDaysInput.value, 10) || 36; 
         } else {
             this.ui.toggleCustomCategoryUI(false); 
-            if (selectedVal === 'cat1') hoursToAdd = parseInt(this.selectedItem.category1, 10) || 0;
-            else if (selectedVal === 'cat2') hoursToAdd = parseInt(this.selectedItem.category2, 10) || 0;
+            // 🚨 終極修復：抓取數值型態的 expireHours1 與 expireHours2，而非文字型態的 category1/2
+            if (selectedVal === 'cat1') {
+                hoursToAdd = parseInt(this.selectedItem.expireHours1, 10) || 0;
+            } else if (selectedVal === 'cat2') {
+                hoursToAdd = parseInt(this.selectedItem.expireHours2, 10) || 0;
+            }
         }
 
         const { mfdPrint, exdPrintLine1, exdPrintLine2 } = DateHelper.calculateEXD(mfdStr, mfdHour, hoursToAdd);
