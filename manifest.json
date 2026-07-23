@@ -1,0 +1,22 @@
+{
+  "name": "廚房效期標籤自動化系統",
+  "short_name": "標籤系統",
+  "description": "門市效期標籤與列印自動化管理系統",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#1e293b",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
