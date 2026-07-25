@@ -33,7 +33,8 @@ export class MainController {
             console.log('✅ [MainController] 成功找到登出按鈕，執行綁定。');
             btnLogout.addEventListener('click', () => {
                 if (confirm('確定要登出並切換門市嗎？\n⚠️ 注意：若目前處於斷網狀態，登出後將無法再次登入！')) {
-                    const keysToRemove = ['storeId', 'storeName', 'brandName', 'middlewareIp', 'printerIp'];
+                    // 🚨 核心修復：加入 'printerLang' 以及 API 相關的快取，確保徹底淨空
+                    const keysToRemove = ['storeId', 'storeName', 'brandName', 'middlewareIp', 'printerIp', 'printerLang', 'apiUrl'];
                     keysToRemove.forEach(key => localStorage.removeItem(key));
                     window.location.reload(); 
                 }
@@ -292,21 +293,7 @@ export class MainController {
         };
     }
 
-    // ✅ 架構優化：移除重複的 generateLabelTSPL，保留最新的 4x5cm 0 度旋轉重構版
-    generateLabelTSPL(printData, qty) {
-        return `
-SIZE 40 mm, 50 mm
-GAP 2 mm, 0
-CLS
-TEXT 10,20,"TST24.BF2",0,1,1,"員工: ${printData.empName}"
-TEXT 10,60,"TST24.BF2",0,1,1,"${printData.mfdPrint}"
-TEXT 10,130,"TST24.BF2",0,2,2,"${printData.itemName}"
-TEXT 220,150,"TST24.BF2",0,1,1,"${printData.category}"
-TEXT 30,240,"TST24.BF2",0,1,1,"${printData.exdLine1}"
-TEXT 130,290,"TST24.BF2",0,1,1,"${printData.exdLine2}"
-PRINT 1,${qty}
-        `.trim();
-    }
+    
 
     async handlePrintAction() {
         if (!this.selectedItem || !this.currentPrintData) return;
@@ -336,8 +323,9 @@ PRINT 1,${qty}
                 ...this.currentPrintData
             };
             
-            // 步驟 1: 委託 Service 根據語言產出指令
-            const finalCommand = printService.generateCommand(lang, printData, qty);
+            // 🚨 架構師修正 1：移除寫死的字串，恢復呼叫 PrintService
+            // 🚨 架構師修正 2：必須加上 await 等待 Canvas 繪圖轉碼完成
+            const finalCommand = await printService.generateCommand(lang, printData, qty);
 
             // 步驟 2: 委託 Service 發送至中介層
             await printService.sendPrintJob(targetIp, printerIp, finalCommand);

@@ -153,6 +153,14 @@ export class LoginController {
         if (data.printerIp) {
             localStorage.setItem('printerIp', data.printerIp);
         }
+        
+        // 🚨 核心修復：確保將標籤機語言存入快取！若無值則給予明確的預設值
+        if (data.printerLang) {
+            localStorage.setItem('printerLang', data.printerLang.toUpperCase());
+        } else {
+            // 萬一舊資料庫沒有填寫，給予預設值以防崩潰
+            localStorage.setItem('printerLang', 'TSPL'); 
+        }
     }
 
     handleLoginSuccess(storeName) {
