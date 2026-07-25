@@ -1,88 +1,105 @@
 // src/services/PrintService.js
 
-// 🚨 依賴注入：引入全域設定檔，確保 API Key 不寫死
 import { SYS_CONFIG } from '../config.js';
 
 class PrintService {
     /**
-     * ==========================================
      * 🟢 [路由層] 根據指定語言動態產出列印指令
-     * 注意：因為 Canvas 繪圖是非同步的，此函式必須是 async
-     * ==========================================
      */
     async generateCommand(lang, printData, qty) {
-        if (lang === 'EZPL') {
-            return await this.generateEZPLGraphic(printData, qty);
+        if (lang === 'ZPL') {
+            return await this.generateZPLGraphic(printData, qty);
         }
-        // 預設 fallback 為 TSPL (文字模式)
+        // Fallback 
         return this.generateTSPL(printData, qty);
     }
 
     /**
-     * ==========================================
-     * 🎨 [核心渲染層] EZPL 圖形渲染引擎 (Canvas 轉 Hex)
-     * ==========================================
+     * 🎨 [核心渲染層] ZPL 圖形渲染引擎 (Canvas 轉 ASCII Hex)
      */
-    async generateEZPLGraphic(printData, qty) {
-        // 1. 繪製虛擬標籤 (40x50mm 於 203dpi 約等於 320x400 dots)
+    /**
+     * 🎨 [核心渲染層] ZPL 圖形渲染引擎 (Canvas 轉 ASCII Hex)
+     */
+    async generateZPLGraphic(printData, qty) {
+        // 1. 建立實體紙張畫布 (物理寬度 320 dots, 物理高度 392 dots)
         const canvas = document.createElement('canvas');
-        canvas.width = 320; 
-        canvas.height = 400;
+        canvas.width = 320;
+        canvas.height = 392;
         const ctx = canvas.getContext('2d');
 
-        // 填滿白底 (防止透明背景轉碼出錯)
+        // 🚨 核心修正：將畫布順時針旋轉 90 度，實現橫向排版 (Landscape)
+        ctx.save();
+        ctx.translate(canvas.width, 0); 
+        ctx.rotate(90 * Math.PI / 180); 
+
+        // ==========================================
+        // 📐 旋轉後的邏輯座標系：X 軸最大值 392，Y 軸最大值 320
+        // ==========================================
+        const LOGICAL_WIDTH = 392;
+        const LOGICAL_HEIGHT = 320;
+
+        // 填滿白底 (覆蓋整個邏輯畫布)
         ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
-        // 繪製黑色文字 (徹底擺脫印表機字庫限制)
         ctx.fillStyle = '#000000';
-        ctx.textBaseline = 'top'; // 統一文字對齊基準線
+        ctx.textBaseline = 'top';
 
-        ctx.font = 'bold 24px sans-serif'; 
-        ctx.fillText(`員工: ${printData.empName}`, 10, 20);
+        // --- 區塊 1：左上角 (員工與 MFD 資訊) ---
+        ctx.textAlign = 'left';
         
-        ctx.font = 'bold 24px sans-serif'; 
-        ctx.fillText(`${printData.mfdPrint}`, 150, 20);
+        ctx.font = '20px sans-serif'; // 小字體
+        ctx.fillText(`員工: ${printData.empName}`, 15, 15);
         
-        ctx.font = 'bold 42px sans-serif'; // 商品名稱放大
-        ctx.fillText(printData.itemName, 10, 80); 
+        ctx.font = '22px sans-serif'; // 次小字體
+        // MFD 靠左對齊，從 X=15 開始，擁有 377 dots 的寬廣空間，絕對不會再被切斷
+        ctx.fillText(`${printData.mfdPrint}`, 15, 45); 
+
+        // --- 區塊 2：中間層 (品名靠左、類別靠右) ---
+        ctx.font = 'bold 44px sans-serif'; // 品名極大字體
+        ctx.fillText(printData.itemName, 15, 100);
+
+        ctx.textAlign = 'right'; // 🟢 切換為靠右對齊
+        ctx.font = '24px sans-serif';
+        // 貼齊右邊界 (392 - 15 = 377)，Y 軸稍微下沉與品名底部對齊
+        ctx.fillText(printData.category, 377, 115); 
+
+        // --- 區塊 3：底層 EXD (視覺焦點，置中特大字體) ---
+        ctx.textAlign = 'center'; // 🟢 切換為置中對齊
+        ctx.font = 'bold 40px sans-serif'; 
         
-        ctx.font = '24px sans-serif';
-        ctx.fillText(printData.category, 10, 150);
+        // 放置在畫布正中間 (X = 392 / 2 = 196)
+        ctx.fillText(printData.exdLine1, LOGICAL_WIDTH / 2, 180);
+        ctx.fillText(printData.exdLine2, LOGICAL_WIDTH / 2, 230);
 
-        ctx.font = '24px sans-serif';
-        ctx.fillText(printData.exdLine1, 10, 200);
+        ctx.restore(); // 恢復原始畫布狀態，準備進行像素轉換
 
-        ctx.font = '24px sans-serif';
-        ctx.fillText(printData.exdLine2, 10, 250);
-
-        // 2. 取得像素資料並轉換為 1BPP 單色 Hex 字串
+        // 2. 獲取像素並轉為 16 進位字串
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const { hexString, widthBytes, height } = this._convertImageDataToHex(imageData);
+        const { hexString, widthBytes, height, totalBytes } = this._convertImageDataToHex(imageData);
 
-        // 3. 組合 EZPL 實體控制指令 (包含你要求的 18mm 停歇點)
-        const ezplCommand = `
-^Q40,3,18
-^W50
-^H10
-^P${qty}
-^S2
-^L
-GW0,0,${widthBytes},${height},${hexString}
-E
+        // 3. 組合 ZPL 實體控制指令
+        const zplCommand = `
+^XA
+^PW320
+^LL392
+^MNY
+^FO0,0^GFA,${totalBytes},${totalBytes},${widthBytes},${hexString}
+^PQ${qty}
+^XZ
         `.trim();
 
-        // 強制轉換為工業級印表機唯一認可的 \r\n 換行符號
-        return ezplCommand.replace(/\r?\n/g, '\r\n') + '\r\n';
+        return zplCommand.replace(/\r?\n/g, '\r\n') + '\r\n';
     }
 
     /**
-     * 🔧 [底層轉碼器] 隱藏的私有方法：將 RGBA 轉為 16 進位單色字串
+     * 🔧 [底層轉碼器] 將 RGBA 轉為 ZPL 認得的 1BPP 黑白 16 進位字串
      */
     _convertImageDataToHex(imageData) {
         const { data, width, height } = imageData;
         let hexString = '';
-        const widthBytes = Math.ceil(width / 8); 
+        const widthBytes = Math.ceil(width / 8);
+        const totalBytes = widthBytes * height;
 
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < widthBytes; x++) {
@@ -91,25 +108,21 @@ E
                     const pixelX = x * 8 + bit;
                     if (pixelX < width) {
                         const index = (y * width + pixelX) * 4;
-                        // 灰階二值化：RGB 平均亮度小於 128 視為黑色 (1)
                         const brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
+                        // ZPL 中：1 為黑 (列印點)，0 為白 (不印點)
                         if (brightness < 128) {
-                            byte |= (1 << (7 - bit)); 
+                            byte |= (1 << (7 - bit));
                         }
                     }
                 }
                 hexString += byte.toString(16).padStart(2, '0').toUpperCase();
             }
         }
-        return { hexString, widthBytes, height };
+        return { hexString, widthBytes, height, totalBytes };
     }
 
-    /**
-     * ==========================================
-     * 📜 [TSPL 備援層] 傳統文字模式
-     * ==========================================
-     */
     generateTSPL(printData, qty) {
+        // ... (保留你原有的 TSPL 備援邏輯) ...
         const tsplCommand = `
 SIZE 40 mm, 50 mm
 GAP 2 mm, 0
@@ -126,24 +139,21 @@ PRINT 1,${qty}
     }
 
     /**
-     * ==========================================
-     * 📡 [網路通訊層] 發送指令至 Node.js 中介層
-     * ==========================================
+     * 📡 [網路通訊層] 回歸最單純的字串傳送
      */
     async sendPrintJob(middlewareIp, printerIp, command) {
-        const apiUrl = `http://${middlewareIp}:3000/api/print`; 
+        const apiUrl = `http://${middlewareIp}:3000/api/print`;
 
         try {
-            console.log(`[PrintService] 準備發送列印任務至: ${printerIp}`);
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': SYS_CONFIG.SECURE_API_KEY 
+                    'x-api-key': SYS_CONFIG.SECURE_API_KEY
                 },
                 body: JSON.stringify({
                     printerIp: printerIp,
-                    printCommand: command 
+                    printCommand: command // 單純傳送編譯好的 ZPL 字串
                 })
             });
 
@@ -153,11 +163,9 @@ PRINT 1,${qty}
             }
             return await response.json();
         } catch (error) {
-            console.error('[PrintService] API 連線失敗:', error.message);
-            throw error; 
+            throw error;
         }
     }
 }
 
-// 單例模式匯出 (Singleton)
 export const printService = new PrintService();

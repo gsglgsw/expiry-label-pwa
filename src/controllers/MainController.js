@@ -305,7 +305,7 @@ export class MainController {
         // 統一從環境變數提取設定
         const targetIp = localStorage.getItem('middlewareIp'); 
         const printerIp = localStorage.getItem('printerIp');
-        const lang = localStorage.getItem('printerLang') || 'TSPL'; 
+        const lang = localStorage.getItem('printerLang') || 'ZPL';
         
         if (!targetIp || !printerIp) {
             this.ui.showToast('尚未設定中介電腦或印表機 IP。', 'error');
@@ -325,7 +325,7 @@ export class MainController {
             
             // 🚨 架構師修正 1：移除寫死的字串，恢復呼叫 PrintService
             // 🚨 架構師修正 2：必須加上 await 等待 Canvas 繪圖轉碼完成
-            const finalCommand = await printService.generateCommand(lang, printData, qty);
+            const finalCommand = await printService.generateCommand(lang, printData, qty);[cite: 2]
 
             // 步驟 2: 委託 Service 發送至中介層
             await printService.sendPrintJob(targetIp, printerIp, finalCommand);
