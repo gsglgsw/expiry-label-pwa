@@ -325,7 +325,7 @@ export class MainController {
             
             // 🚨 架構師修正 1：移除寫死的字串，恢復呼叫 PrintService
             // 🚨 架構師修正 2：必須加上 await 等待 Canvas 繪圖轉碼完成
-            const finalCommand = await printService.generateCommand(lang, printData, qty);[cite: 2]
+            const finalCommand = await printService.generateCommand(lang, printData, qty);
 
             // 步驟 2: 委託 Service 發送至中介層
             await printService.sendPrintJob(targetIp, printerIp, finalCommand);
