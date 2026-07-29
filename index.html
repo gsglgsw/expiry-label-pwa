@@ -6,161 +6,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>效期標籤自動化系統</title>
 
-    <!-- 🟢 PWA Manifest 註冊 -->
     <link rel="manifest" href="./manifest.json">
-
-    <!-- 🟢 確保行動裝置渲染比例正確 -->
     <meta name="theme-color" content="#1e293b">
-
-    <!-- 🍎 iOS Safari 專屬 PWA 支援 (Apple 傲嬌必須特別加) -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="標籤系統">
     <link rel="apple-touch-icon" href="./assets/icon-192.png">
-
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        body {
-            user-select: none;
-            overflow: hidden;
-        }
-
-        /* 隱藏掃描槍的實體輸入框，但保持游標可以對焦 */
-        .scanner-trap {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* 🖨️ 虛擬列印專用排版 (修復空白與尺寸鎖死問題) */
-        /* 🖨️ 虛擬列印專用排版 (解決虛擬列印無邊框問題) */
+        body { user-select: none; overflow: hidden; }
+        .scanner-trap { position: absolute; opacity: 0; pointer-events: none; }
         @media print {
-            body * {
-                visibility: hidden;
-            }
-
-            /* 允許效期標籤與 QR Code 的列印容器顯示 */
-            #print-container,
-            #print-container * {
-                visibility: visible;
-            }
-
-            #qr-print-container,
-            #qr-print-container * {
-                visibility: visible;
-            }
-
-            /* 將容器固定在列印紙張的最左上角 */
-            #print-container,
-            #qr-print-container {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-
-            /* 隱藏網頁上的按鈕與輸入框 */
-            .print-hide-ui {
-                display: none !important;
-            }
-
-            #print-only-category,
-            #print-only-mfd {
-                display: block !important;
-            }
-
-            /* 💡 修正：強制在虛擬列印時顯示 1px 圓角細黑框，方便你檢視 40x30mm 的排版範圍 */
+            body * { visibility: hidden; }
+            #print-container, #print-container * { visibility: visible; }
+            #qr-print-container, #qr-print-container * { visibility: visible; }
+            #print-container, #qr-print-container { position: absolute; left: 0; top: 0; width: 100%; }
+            .print-hide-ui { display: none !important; }
+            #print-only-category, #print-only-mfd { display: block !important; }
             .print-label-page {
                 page-break-after: always;
                 border: 1px solid #333333 !important;
-                /* 顯現邊框線 */
                 border-radius: 8px !important;
-                /* 保持漂亮的圓角 */
                 padding: 3mm !important;
-                /* 預留內縮安全邊距 */
                 box-sizing: border-box !important;
                 margin-bottom: 20px;
                 background: white !important;
             }
-
-            /* 確保顏色在轉 PDF 時不會被省電模式吃掉 */
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
 
 <body class="bg-gray-100 text-gray-800 h-screen flex flex-col font-sans">
-    <!-- 🟢 全局 Loading 遮罩 (預設隱藏) -->
-    <div id="global-loading-overlay"
-        class="fixed inset-0 bg-black/60 z-[9999] hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300">
-        <!-- 旋轉動畫 SVG -->
-        <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24">
+    <div id="global-loading-overlay" class="fixed inset-0 bg-black/60 z-[9999] hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300">
+        <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-            </path>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <!-- 動態提示文字 -->
         <p id="global-loading-text" class="text-white text-xl font-bold tracking-widest">載入中...</p>
     </div>
 
-    <div id="login-view"
-        class="fixed inset-0 z-50 flex flex-col items-center justify-center min-h-screen bg-gray-100 transition-opacity duration-500">
-
+    <div id="login-view" class="fixed inset-0 z-50 flex flex-col items-center justify-center min-h-screen bg-gray-100 transition-opacity duration-500">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-[400px]">
             <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">門市系統登入</h2>
-
-            <div
-                class="mb-6 bg-gray-50 border-2 border-gray-200 rounded-lg h-16 flex items-center justify-center text-4xl tracking-[0.5em] font-mono text-gray-700">
+            <div class="mb-6 bg-gray-50 border-2 border-gray-200 rounded-lg h-16 flex items-center justify-center text-4xl tracking-[0.5em] font-mono text-gray-700">
                 <span id="pin-display"></span>
             </div>
-
-            <p id="login-error-msg"
-                class="text-red-500 text-center mb-4 min-h-[24px] font-semibold opacity-0 transition-opacity"></p>
-
+            <p id="login-error-msg" class="text-red-500 text-center mb-4 min-h-[24px] font-semibold opacity-0 transition-opacity"></p>
             <div id="numpad-container" class="grid grid-cols-3 gap-4">
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="1">1</button>
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="2">2</button>
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="3">3</button>
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="4">4</button>
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="5">5</button>
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="6">6</button>
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="7">7</button>
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="8">8</button>
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="9">9</button>
-
-                <button
-                    class="numpad-btn bg-red-50 hover:bg-red-100 text-red-600 text-xl font-bold py-4 rounded-xl transition-colors"
-                    data-action="clear">清除</button>
-                <button
-                    class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors"
-                    data-val="0">0</button>
-                <button
-                    class="numpad-btn bg-blue-500 hover:bg-blue-600 text-white text-xl font-bold py-4 rounded-xl transition-colors shadow-md"
-                    data-action="submit">登入</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="1">1</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="2">2</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="3">3</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="4">4</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="5">5</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="6">6</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="7">7</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="8">8</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="9">9</button>
+                <button class="numpad-btn bg-red-50 hover:bg-red-100 text-red-600 text-xl font-bold py-4 rounded-xl transition-colors" data-action="clear">清除</button>
+                <button class="numpad-btn bg-gray-100 hover:bg-gray-200 text-gray-800 text-2xl font-semibold py-4 rounded-xl transition-colors" data-val="0">0</button>
+                <button class="numpad-btn bg-blue-500 hover:bg-blue-600 text-white text-xl font-bold py-4 rounded-xl transition-colors shadow-md" data-action="submit">登入</button>
             </div>
         </div>
     </div>
@@ -173,247 +79,115 @@
                 <span class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></span>
                 <span>網路已連線</span>
             </div>
-            <button id="sync-btn"
-                class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg transition-all">
+            <button id="sync-btn" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg transition-all">
                 🔄 同步資料庫
             </button>
         </div>
-
-
     </header>
 
-    <!-- 👑 督導門市選擇彈窗 (預設隱藏，Z-index 設為最高以蓋過登入畫面) -->
-    <div id="super-admin-modal"
-        class="hidden fixed inset-0 bg-slate-900/90 z-[100] flex justify-center items-center backdrop-blur-md transition-all duration-300 opacity-0">
-        <div class="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-8 transform scale-95 transition-transform duration-300"
-            id="super-admin-card">
+    <div id="super-admin-modal" class="hidden fixed inset-0 bg-slate-900/90 z-[100] flex justify-center items-center backdrop-blur-md transition-all duration-300 opacity-0">
+        <div class="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-8 transform scale-95 transition-transform duration-300" id="super-admin-card">
             <h2 class="text-3xl font-black text-blue-800 mb-2 flex items-center gap-3">👑 總部特權登入</h2>
             <p class="text-gray-500 font-bold mb-6">設備硬體驗證通過。請選擇您要操作的門市：</p>
-
-            <select id="super-store-select"
-                class="w-full text-2xl font-bold bg-blue-50 border-4 border-blue-200 rounded-xl p-4 text-blue-900 focus:outline-none focus:border-blue-500 transition-all mb-8 shadow-inner cursor-pointer">
-                <!-- JS 動態注入選項 -->
-            </select>
-
-            <button id="btn-super-enter"
-                class="w-full px-6 py-5 rounded-2xl font-black text-2xl text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 transition-colors shadow-[0_10px_20px_rgba(37,99,235,0.3)] active:scale-95">
+            <select id="super-store-select" class="w-full text-2xl font-bold bg-blue-50 border-4 border-blue-200 rounded-xl p-4 text-blue-900 focus:outline-none focus:border-blue-500 transition-all mb-8 shadow-inner cursor-pointer"></select>
+            <button id="btn-super-enter" class="w-full px-6 py-5 rounded-2xl font-black text-2xl text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 transition-colors shadow-[0_10px_20px_rgba(37,99,235,0.3)] active:scale-95">
                 進入系統 🚀
             </button>
         </div>
     </div>
 
-
-    <!-- 新版 POS 主介面 (三欄式觸控架構) -->
-    <!-- 注意：確保這段程式碼放在 <header> 的正下方 -->
     <main class="flex-1 flex overflow-hidden bg-gray-50">
-
-        <!-- 左欄：分類導覽列 (Category Navigation) -->
-        <!-- 使用 w-48 固定寬度，深色背景提供高對比度 -->
         <aside class="w-48 bg-slate-800 text-white flex flex-col shadow-2xl z-20 shrink-0">
             <div class="p-4 text-center border-b border-slate-700 shrink-0">
                 <span class="font-bold tracking-widest text-slate-300">商品分類</span>
             </div>
-            <!-- 分類選單容器 (透過 Controller 動態注入 li) -->
             <ul id="category-menu" class="flex-1 overflow-y-auto flex flex-col w-full">
-                <!-- 預設選項，後續會由 JS 自動產生對應的分類按鈕 -->
-                <li
-                    class="p-5 text-xl font-bold text-center border-b border-slate-700 bg-blue-600 cursor-pointer transition-colors">
-                    全部商品
-                </li>
+                <li class="p-5 text-xl font-bold text-center border-b border-slate-700 bg-blue-600 cursor-pointer transition-colors">全部商品</li>
             </ul>
-            <!-- 💡 新增：系統設定按鈕 (釘選在導覽列最底端) -->
             <div class="mt-4 pt-4 border-t border-gray-700">
-                <button id="btn-open-settings"
-                    class="w-full flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-200 py-3 rounded-xl transition-colors font-bold text-lg active:scale-95">
-                    ⚙️ 系統設定
-                </button>
-
-                <!-- 💡 新增的：登出與切換帳號按鈕 -->
-                <button id="btn-logout"
-                    class="w-full flex items-center justify-center gap-2 bg-red-900/50 hover:bg-red-800 text-red-200 py-3 rounded-xl transition-colors font-bold text-lg active:scale-95 mt-3 border border-red-800/50">
-                    🚪 切換門市 / 登出
-                </button>
-
+                <button id="btn-open-settings" class="w-full flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-200 py-3 rounded-xl transition-colors font-bold text-lg active:scale-95">⚙️ 系統設定</button>
+                <button id="btn-logout" class="w-full flex items-center justify-center gap-2 bg-red-900/50 hover:bg-red-800 text-red-200 py-3 rounded-xl transition-colors font-bold text-lg active:scale-95 mt-3 border border-red-800/50">🚪 切換門市 / 登出</button>
             </div>
         </aside>
 
-        <!-- 中欄：商品網格區 (Item Grid) -->
-        <!-- flex-1 讓它自動填滿剩餘的中央空間 -->
         <section class="flex-1 flex flex-col relative bg-gray-100">
-            <!-- 頂部：狀態列與搜尋框 -->
             <div class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
                 <h2 id="current-category-title" class="text-2xl font-black text-gray-700 tracking-wider">全部商品</h2>
                 <div class="relative">
-                    <input type="text" id="item-search-input"
-                        class="pl-10 pr-4 py-2 w-64 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none font-bold text-gray-700"
-                        placeholder="搜尋品名...">
+                    <input type="text" id="item-search-input" class="pl-10 pr-4 py-2 w-64 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none font-bold text-gray-700" placeholder="搜尋品名...">
                     <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
                 </div>
             </div>
-
-            <!-- 商品卡片網格容器 (使用 CSS Grid 實作響應式排列) -->
-            <div id="item-grid-container"
-                class="flex-1 overflow-y-auto p-6 grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 content-start">
-                <!-- 骨架屏或載入中提示 (後續由 JS 清空並注入卡片) -->
-                <div class="col-span-full text-center text-gray-400 text-xl font-bold mt-10">
-                    等待載入資料庫...
-                </div>
+            <div id="item-grid-container" class="flex-1 overflow-y-auto p-6 grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 content-start">
+                <div class="col-span-full text-center text-gray-400 text-xl font-bold mt-10">等待載入資料庫...</div>
             </div>
         </section>
 
-        <!-- 右欄：列印預覽與操作控制台 (Print Console) -->
-        <!-- w-1/3 確保操作面板有足夠且固定的寬度供手指點擊 -->
-        <aside
-            class="w-1/3 min-w-[350px] bg-white border-l border-gray-200 shadow-[0_0_15px_rgba(0,0,0,0.05)] flex flex-col z-20 shrink-0">
-
-            <!-- 頂部：當班員工設定 (從原本的舊版側邊欄合併過來) -->
+        <aside class="w-1/3 min-w-[350px] bg-white border-l border-gray-200 shadow-[0_0_15px_rgba(0,0,0,0.05)] flex flex-col z-20 shrink-0">
             <div class="p-6 border-b border-gray-100 bg-slate-50 shrink-0">
                 <label class="block text-gray-500 text-sm font-bold mb-2">🧑‍🍳 當班員工設定</label>
-                <input type="text" id="employee-name" placeholder="請輸入姓名..."
-                    class="w-full text-2xl font-black border-2 border-gray-300 rounded-xl p-3 focus:border-blue-500 focus:outline-none text-center bg-white shadow-inner">
+                <input type="text" id="employee-name" placeholder="請輸入姓名..." class="w-full text-2xl font-black border-2 border-gray-300 rounded-xl p-3 focus:border-blue-500 focus:outline-none text-center bg-white shadow-inner">
             </div>
 
-            <!-- 列印操作區 (佔滿下方剩餘空間) -->
             <div class="flex-1 overflow-y-auto p-6 flex flex-col relative">
-
-                <!-- 狀態 1：空白提示 (尚未點選任何商品時顯示) -->
-                <div id="preview-empty-state"
-                    class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 bg-white z-10 transition-opacity">
+                <div id="preview-empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 bg-white z-10 transition-opacity">
                     <span class="text-7xl mb-6">👈</span>
                     <p class="text-2xl font-bold text-gray-400">請點選左方商品</p>
                 </div>
 
-                <!-- ✅ 終極修復：5x4 橫向比例，加入小時步進器與修復日曆觸發 -->
-                <div id="preview-active-state"
-                    class="opacity-0 pointer-events-none transition-opacity duration-300 flex-1 flex flex-col">
-                    <!-- 預覽畫布：模擬 5x4 公分橫向比例 (寬350 x 高280) -->
-                    <div class="border-2 border-slate-700 rounded-xl p-5 bg-white mx-auto relative shadow-sm flex flex-col"
-                        style="width: 350px; height: 280px;">
-
-                        <!-- 第一行：員工資訊 -->
+                <div id="preview-active-state" class="opacity-0 pointer-events-none transition-opacity duration-300 flex-1 flex flex-col">
+                    <div class="border-2 border-slate-700 rounded-xl p-5 bg-white mx-auto relative shadow-sm flex flex-col" style="width: 350px; height: 280px;">
                         <div class="text-sm text-gray-600 font-bold mb-2">
-                            員工：<span id="preview-emp-name">未填寫</span>
+                            <!-- 🚨 架構師修正：移除了預設的「未填寫」字串 -->
+                            員工：<span id="preview-emp-name"></span>
                         </div>
 
-                        <!-- 第二行：MFD 日期與「小時步進器」 -->
                         <div class="flex items-center text-sm font-bold text-gray-800 mb-4 justify-between">
-                            <!-- 日期觸發區塊 -->
-                            <div id="mfd-date-trigger"
-                                class="cursor-pointer hover:text-blue-600 flex items-center bg-slate-50 px-2 py-1 rounded">
+                            <div id="mfd-date-trigger" class="cursor-pointer hover:text-blue-600 flex items-center bg-slate-50 px-2 py-1 rounded">
                                 <span id="preview-mfd-display"></span>
-                                <svg class="w-4 h-4 ml-1 text-blue-500" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
-                                    </path>
+                                <svg class="w-4 h-4 ml-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                                 </svg>
-                                <!-- 隱藏但保留感應的日曆輸入框 -->
                                 <input type="date" id="preview-mfd-input" class="opacity-0 absolute w-0 h-0 border-0">
                             </div>
 
-                            <!-- 👨‍💻 廚房友善設計：小時 Stepper -->
                             <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-1 border border-slate-200">
-                                <button id="btn-mfd-hour-minus"
-                                    class="w-8 h-8 rounded bg-white font-black text-slate-600 shadow-sm active:bg-slate-200 active:scale-95 transition-all">-</button>
-                                <div class="w-10 text-center font-black text-lg text-blue-700"
-                                    id="preview-mfd-hour-display" data-hour="0">00</div>
-                                <button id="btn-mfd-hour-plus"
-                                    class="w-8 h-8 rounded bg-white font-black text-slate-600 shadow-sm active:bg-slate-200 active:scale-95 transition-all">+</button>
+                                <button id="btn-mfd-hour-minus" class="w-8 h-8 rounded bg-white font-black text-slate-600 shadow-sm active:bg-slate-200 active:scale-95 transition-all">-</button>
+                                <div class="w-10 text-center font-black text-lg text-blue-700" id="preview-mfd-hour-display" data-hour="0">00</div>
+                                <button id="btn-mfd-hour-plus" class="w-8 h-8 rounded bg-white font-black text-slate-600 shadow-sm active:bg-slate-200 active:scale-95 transition-all">+</button>
                             </div>
                         </div>
 
-                        <!-- 第三行：品名與用途 -->
                         <div class="flex justify-between items-center mb-2">
-                            <div id="preview-item-name"
-                                class="text-3xl font-black text-gray-800 leading-tight truncate max-w-[70%]">
-                                <!-- JS 注入品名 -->
-                            </div>
-                            <div id="preview-category-text" class="text-lg font-bold text-gray-600 whitespace-nowrap">
-                                <!-- JS 注入用途 -->
-                            </div>
+                            <div id="preview-item-name" class="text-3xl font-black text-gray-800 leading-tight truncate max-w-[70%]"></div>
+                            <div id="preview-category-text" class="text-lg font-bold text-gray-600 whitespace-nowrap"></div>
                         </div>
 
-                        <!-- 第四行 (置底居中)：EXD 效期 -->
                         <div class="mt-auto w-full text-center pb-2">
-                            <div id="preview-exd-text"
-                                class="text-[1.7rem] font-black text-gray-800 leading-snug tracking-wide">
-                                <!-- JS 注入兩行 EXD -->
-                            </div>
+                            <div id="preview-exd-text" class="text-[1.7rem] font-black text-gray-800 leading-snug tracking-wide"></div>
                         </div>
                     </div>
                 </div>
-                <!-- ========================================== -->
-                <!-- 右欄設定區：用途、張數與列印按鈕 -->
-                <!-- ========================================== -->
 
-                <!-- 1. 標籤用途設定 (下拉選單) -->
                 <div class="mt-6">
-                    <label class="text-sm font-bold text-gray-500 flex items-center gap-2 mb-2">
-                        🏷️ 標籤用途設定
-                    </label>
-                    <select id="preview-category-select"
-                        class="w-full text-xl font-bold text-blue-700 border-2 border-blue-200 rounded-xl p-3 focus:outline-none focus:border-blue-500 bg-blue-50 cursor-pointer appearance-none">
-                        <!-- 這裡的選項會由 JS (MainController.js) 動態注入 -->
-                    </select>
+                    <label class="text-sm font-bold text-gray-500 flex items-center gap-2 mb-2">🏷️ 標籤用途設定</label>
+                    <select id="preview-category-select" class="w-full text-xl font-bold text-blue-700 border-2 border-blue-200 rounded-xl p-3 focus:outline-none focus:border-blue-500 bg-blue-50 cursor-pointer appearance-none"></select>
                 </div>
+                
+                <!-- 🚨 架構師修正：此處已將 custom-category-container 區塊徹底刪除，遵守 DRY 原則 -->
 
-                <!-- 2. ✅ 補回遺失的：自訂用途面板 (預設隱藏 hidden，由 JS 觸發切換) -->
-                <div id="custom-category-container"
-                    class="hidden flex-col gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100 mt-4">
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 flex items-center gap-1 mb-1">
-                            <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
-                                </path>
-                            </svg>
-                            自訂用途名稱 (列印顯示用)
-                        </label>
-                        <input type="text" id="custom-category-input"
-                            class="w-full text-lg font-bold text-gray-800 border-2 border-orange-200 rounded-lg p-2 focus:outline-none focus:border-orange-500 bg-white"
-                            placeholder="例如：特殊處理">
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 flex items-center gap-1 mb-1">
-                            ⏳ 自訂效期時數
-                        </label>
-                        <div class="flex items-center gap-2">
-                            <button id="btn-custom-days-minus"
-                                class="w-10 h-10 rounded-lg bg-white border-2 border-orange-200 text-orange-600 font-bold text-xl active:bg-orange-100">-</button>
-                            <!-- 預設值改為 36 -->
-                            <input type="number" id="custom-days-input"
-                                class="w-20 h-10 text-center text-xl font-black text-gray-800 border-2 border-orange-200 rounded-lg focus:outline-none focus:border-orange-500 bg-white"
-                                value="36" min="1" max="999">
-                            <button id="btn-custom-days-plus"
-                                class="w-10 h-10 rounded-lg bg-white border-2 border-orange-200 text-orange-600 font-bold text-xl active:bg-orange-100">+</button>
-                            <!-- 單位改為小時 -->
-                            <span class="text-gray-600 font-bold ml-2">小時</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. 列印張數設定 -->
                 <div class="mt-6 flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <span class="text-lg font-bold text-gray-700">列印張數</span>
                     <div class="flex items-center gap-3">
-                        <button id="btn-qty-minus"
-                            class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-100 hover:border-slate-300 transition-colors">-</button>
-                        <input type="number" id="print-quantity"
-                            class="w-16 h-12 text-center text-2xl font-black text-gray-800 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white"
-                            value="1" min="1" max="99">
-                        <button id="btn-qty-plus"
-                            class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-100 hover:border-slate-300 transition-colors">+</button>
+                        <button id="btn-qty-minus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-100 hover:border-slate-300 transition-colors">-</button>
+                        <input type="number" id="print-quantity" class="w-16 h-12 text-center text-2xl font-black text-gray-800 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white" value="1" min="1" max="99">
+                        <button id="btn-qty-plus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-100 hover:border-slate-300 transition-colors">+</button>
                     </div>
                 </div>
 
-                <!-- 4. 執行列印按鈕 -->
-                <button id="btn-print"
-                    class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-3">
+                <button id="btn-print" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-3">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
-                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                     </svg>
                     列印標籤
                 </button>
@@ -421,39 +195,23 @@
         </aside>
     </main>
 
-    <!-- ========================================== -->
-    <!-- ⚙️ 系統設定彈窗 (Modal) -->
-    <!-- ========================================== -->
-    <div id="settings-modal"
-        class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center backdrop-blur-sm transition-opacity">
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-md p-6 transform scale-100 transition-transform">
             <h2 class="text-2xl font-black text-gray-800 mb-4 flex items-center gap-2">⚙️ 標籤機設定</h2>
-
             <div class="mb-6">
                 <label class="block text-gray-700 font-bold mb-2 text-sm">🖨️ 標籤機 IP 位址</label>
-                <!-- 💡 加上 readonly，並改變背景色提示不可編輯 -->
-                <input type="text" id="printer-ip-input" readonly
-                    class="w-full text-xl font-bold border-2 border-gray-200 rounded-lg p-3 text-gray-500 bg-gray-100 cursor-not-allowed"
-                    placeholder="等待雲端同步...">
+                <input type="text" id="printer-ip-input" readonly class="w-full text-xl font-bold border-2 border-gray-200 rounded-lg p-3 text-gray-500 bg-gray-100 cursor-not-allowed" placeholder="等待雲端同步...">
                 <p class="text-xs text-blue-500 mt-2 font-bold">ℹ️ 此 IP 由總部雲端派發，員工無須手動設定。</p>
             </div>
-
             <div class="flex justify-end gap-3 mt-8">
-                <button id="btn-close-settings"
-                    class="px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 transition-colors active:scale-95">取消</button>
-                <button id="btn-save-settings"
-                    class="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-md active:scale-95">💾
-                    儲存設定</button>
+                <button id="btn-close-settings" class="px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 transition-colors active:scale-95">取消</button>
+                <button id="btn-save-settings" class="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-md active:scale-95">💾 儲存設定</button>
             </div>
         </div>
     </div>
 
-
     <script type="module" src="./src/app.js"></script>
-    <!-- 🟢 全局 Toast 通知容器 (固定於右下角，Z-index 設為最高) -->
-    <!-- pointer-events-none 確保容器本身不會阻擋下方的按鈕點擊 -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-3 pointer-events-none">
-    </div>
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-3 pointer-events-none"></div>
 </body>
 
 </html>

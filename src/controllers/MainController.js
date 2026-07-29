@@ -15,7 +15,7 @@ export class MainController {
         this.handleCategorySelect = this.handleCategorySelect.bind(this);
         this.handleItemSelect = this.handleItemSelect.bind(this);
         this.handlePrintAction = this.handlePrintAction.bind(this);
-        this.handleSearch = this.handleSearch.bind(this); // ✅ 現已擁有對應的實作方法
+        this.handleSearch = this.handleSearch.bind(this); 
         this.recalculateEXD = this.recalculateEXD.bind(this);
         this.handleSyncAction = this.handleSyncAction.bind(this);
         this.handleCategoryChange = this.handleCategoryChange.bind(this);
@@ -33,7 +33,6 @@ export class MainController {
             console.log('✅ [MainController] 成功找到登出按鈕，執行綁定。');
             btnLogout.addEventListener('click', () => {
                 if (confirm('確定要登出並切換門市嗎？\n⚠️ 注意：若目前處於斷網狀態，登出後將無法再次登入！')) {
-                    // 🚨 核心修復：加入 'printerLang' 以及 API 相關的快取，確保徹底淨空
                     const keysToRemove = ['storeId', 'storeName', 'brandName', 'middlewareIp', 'printerIp', 'printerLang', 'apiUrl'];
                     keysToRemove.forEach(key => localStorage.removeItem(key));
                     window.location.reload(); 
@@ -64,13 +63,12 @@ export class MainController {
         }
 
         this.ui.categorySelect.addEventListener('change', this.handleCategoryChange);
-        this.ui.customCategoryInput.addEventListener('input', this.recalculateEXD);
-        this.ui.customDaysInput.addEventListener('input', this.recalculateEXD);
+        
+        // 🚨 架構師修正：已拔除 customCategoryInput 相關的監聽器綁定
         
         this.ui.btnPrint.addEventListener('click', this.handlePrintAction);
     }
     
-    // ✅ 補齊遺失的方法：處理搜尋過濾邏輯，並確保空白標籤依然置頂
     handleSearch(event) {
         const keyword = String(event.target.value).toLowerCase().trim();
         
@@ -85,7 +83,6 @@ export class MainController {
             return label.includes(keyword) || id.includes(keyword) || id === 'sys-blank';
         });
 
-        // 📌 維持 SYS-BLANK 絕對置頂
         const blankItemIndex = filteredItems.findIndex(item => String(item.internalId || '').toUpperCase() === 'SYS-BLANK');
         if (blankItemIndex > 0) {
             const blankItem = filteredItems.splice(blankItemIndex, 1)[0];
@@ -171,8 +168,6 @@ export class MainController {
     }
 
     handleItemSelect(item) {
-        
-        
         if (!(this instanceof MainController)) {
             console.error('❌ [嚴重架構錯誤] this 作用域遺失！目前的 this 已經不是 MainController。');
         }
@@ -188,16 +183,13 @@ export class MainController {
         if (item && item.category2) {
             this.ui.categorySelect.add(new Option(`${item.category2} (${item.expireHours2 || 0}H)`, 'cat2'));
         }
-        this.ui.categorySelect.add(new Option('自訂用途(預設3餐期)', 'custom'));
-        
+        // 🚨 架構師修正：將「自訂用途」更名為「手寫標籤」
+        this.ui.categorySelect.add(new Option('手寫標籤', 'custom'));
         
         this.handleCategoryChange({ target: this.ui.categorySelect });
     }
 
-    // ✅ 架構優化：修復 MVC 介面對接錯誤，改用正確的 toggleCustomCategoryUI
     handleCategoryChange(event) {
-        
-        
         if (!this.selectedItem) {
             console.error('❌ [執行攔截] 試圖在 this.selectedItem 為 undefined 的狀態下變更分類！已強制中斷執行以保護系統。');
             return; 
@@ -206,20 +198,13 @@ export class MainController {
         const selectedVal = event.target.value;
         const hourDisplay = document.getElementById('preview-mfd-hour-display');
         
+        // 🚨 架構師修正：因為沒有 UI 了，我們只需負責重置時間資料即可
         if (selectedVal === 'custom') {
-            // 對接正確的 UI 方法：開啟自訂面板
-            if (typeof this.ui.toggleCustomCategoryUI === 'function') {
-                this.ui.toggleCustomCategoryUI(true);
-            }
             if (hourDisplay) {
                 hourDisplay.dataset.hour = '0';
                 hourDisplay.innerText = '00';
             }
         } else {
-            // 對接正確的 UI 方法：關閉自訂面板
-            if (typeof this.ui.toggleCustomCategoryUI === 'function') {
-                this.ui.toggleCustomCategoryUI(false);
-            }
             const sysTime = DateHelper.getCurrentRoundedTime();
             if (hourDisplay) {
                 hourDisplay.dataset.hour = sysTime.hour;
@@ -255,45 +240,45 @@ export class MainController {
         const selectedVal = this.ui.categorySelect.value;
         let hoursToAdd = 0;
 
-        if (selectedVal === 'custom') {
-            this.ui.toggleCustomCategoryUI(true); 
-            hoursToAdd = parseInt(this.ui.customDaysInput.value, 10) || 36; 
-        } else {
-            this.ui.toggleCustomCategoryUI(false); 
-            // 🚨 終極修復：抓取數值型態的 expireHours1 與 expireHours2，而非文字型態的 category1/2
-            if (selectedVal === 'cat1') {
-                hoursToAdd = parseInt(this.selectedItem.expireHours1, 10) || 0;
-            } else if (selectedVal === 'cat2') {
-                hoursToAdd = parseInt(this.selectedItem.expireHours2, 10) || 0;
-            }
+        // 🚨 架構師修正：如果是 custom (手寫標籤)，不需要抓取時數
+        if (selectedVal === 'cat1') {
+            hoursToAdd = parseInt(this.selectedItem.expireHours1, 10) || 0;
+        } else if (selectedVal === 'cat2') {
+            hoursToAdd = parseInt(this.selectedItem.expireHours2, 10) || 0;
         }
 
         const { mfdPrint, exdPrintLine1, exdPrintLine2 } = DateHelper.calculateEXD(mfdStr, mfdHour, hoursToAdd);
         
-        let categoryText = (selectedVal === 'custom') 
-            ? (this.ui.customCategoryInput.value.trim() || '自訂用途')
+        const isHandwriting = (selectedVal === 'custom');
+        
+        let categoryText = isHandwriting 
+            ? '手寫標籤'
             : this.selectedItem[`category${selectedVal === 'cat1' ? '1' : '2'}`];
 
-        const isBlank = (categoryText === '空白');
+        const isBlankItem = (categoryText === '空白' || this.selectedItem.internalId === 'SYS-BLANK');
         
-        this.ui.previewMfdDisplay.innerText = mfdPrint;
-        this.ui.previewCategoryText.innerText = isBlank ? '' : categoryText;
-        
-        if (isBlank) {
+        // --- 🟢 核心修改：處理畫面的預覽顯示 (雙留白排版) ---
+        if (isHandwriting) {
+            this.ui.previewMfdDisplay.innerText = '    .   .   ';
+            this.ui.previewExdText.innerHTML = `EXD: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;時`;
+        } else if (isBlankItem) {
+            this.ui.previewMfdDisplay.innerText = mfdPrint; 
             this.ui.previewExdText.innerHTML = `EXD: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;時`;
         } else {
+            this.ui.previewMfdDisplay.innerText = mfdPrint;
             this.ui.previewExdText.innerHTML = `${exdPrintLine1}<br>${exdPrintLine2}`;
         }
+
+        this.ui.previewCategoryText.innerText = isBlankItem ? '' : categoryText;
         
+        // --- 🟢 核心修改：打包給印表機的資料 (確保 ZPL 收到空白的字串) ---
         this.currentPrintData = {
-            mfdPrint: mfdPrint,
-            category: isBlank ? '' : `用途: ${categoryText}`,
-            exdLine1: isBlank ? 'EXD:        .       .       ' : exdPrintLine1,
-            exdLine2: isBlank ? '                       時' : exdPrintLine2
+            mfdPrint: isHandwriting ? '    .   .   ' : mfdPrint,
+            category: isBlankItem ? '' : `用途: ${categoryText}`,
+            exdLine1: (isHandwriting || isBlankItem) ? 'EXD:        .       .       ' : exdPrintLine1,
+            exdLine2: (isHandwriting || isBlankItem) ? '                       時' : exdPrintLine2
         };
     }
-
-    
 
     async handlePrintAction() {
         if (!this.selectedItem || !this.currentPrintData) return;
@@ -302,7 +287,6 @@ export class MainController {
         const originalText = btn.innerHTML;
         const qty = parseInt(this.ui.qtyInput.value, 10) || 1;
         
-        // 統一從環境變數提取設定
         const targetIp = localStorage.getItem('middlewareIp'); 
         const printerIp = localStorage.getItem('printerIp');
         const lang = localStorage.getItem('printerLang') || 'ZPL';
@@ -317,17 +301,14 @@ export class MainController {
             btn.innerHTML = `⏳ 傳輸中 (${lang})...`;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
 
+            // 🚨 架構師修正：取消 '未填寫' 的 fallback，讓它純粹空白
             const printData = {
-                empName: this.ui.employeeNameInput.value || '未填寫',
+                empName: this.ui.employeeNameInput.value || '',
                 itemName: this.selectedItem.labelName,
                 ...this.currentPrintData
             };
             
-            // 🚨 架構師修正 1：移除寫死的字串，恢復呼叫 PrintService
-            // 🚨 架構師修正 2：必須加上 await 等待 Canvas 繪圖轉碼完成
             const finalCommand = await printService.generateCommand(lang, printData, qty);
-
-            // 步驟 2: 委託 Service 發送至中介層
             await printService.sendPrintJob(targetIp, printerIp, finalCommand);
             
             this.ui.showToast(`✅ ${lang} 列印指令已成功送達！`);

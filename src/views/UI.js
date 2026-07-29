@@ -22,12 +22,7 @@ export class UIManager {
         this.btnQtyPlus = document.getElementById('btn-qty-plus');
         this.btnPrint = document.getElementById('btn-print');
         
-        this.customCategoryContainer = document.getElementById('custom-category-container');
-        this.customCategoryInput = document.getElementById('custom-category-input');
-        this.customDaysInput = document.getElementById('custom-days-input');
-        
-        this.btnCustomDaysMinus = document.getElementById('btn-custom-days-minus');
-        this.btnCustomDaysPlus = document.getElementById('btn-custom-days-plus');
+        // 🚨 架構師修正：已徹底刪除自訂用途面板的所有 DOM 綁定，避免記憶體洩漏與報錯
         
         this.btnOpenSettings = document.getElementById('btn-open-settings');
         this.settingsModal = document.getElementById('settings-modal');
@@ -38,19 +33,18 @@ export class UIManager {
         // MFD 控制 DOM
         this.previewMfdDisplay = document.getElementById('preview-mfd-display');
         this.previewMfdInput = document.getElementById('preview-mfd-input');
-        this.previewMfdHourSelect = document.getElementById('preview-mfd-hour-select'); // 💡 新增綁定
+        this.previewMfdHourSelect = document.getElementById('preview-mfd-hour-select');
 
         this.loadingOverlay = document.getElementById('global-loading-overlay');
         this.loadingText = document.getElementById('global-loading-text');
         
-        
         this.initBasicUIEvents();
     }
     
-    
     initBasicUIEvents() {
         this.employeeNameInput.addEventListener('input', (e) => {
-            this.previewEmpName.innerText = e.target.value || '未填寫';
+            // 🚨 架構師修正：若無輸入，直接回傳空字串
+            this.previewEmpName.innerText = e.target.value || '';
         });
 
         // --- MFD 小時 Stepper 邏輯 ---
@@ -61,13 +55,11 @@ export class UIManager {
         const updateHour = (delta) => {
             let currentHour = parseInt(hourDisplay.dataset.hour, 10);
             currentHour += delta;
-            // 實現 0-23 的無限循環 (0 減 1 變 23，23 加 1 變 0)
             if (currentHour < 0) currentHour = 23;
             if (currentHour > 23) currentHour = 0;
             
             hourDisplay.dataset.hour = currentHour;
             hourDisplay.innerText = String(currentHour).padStart(2, '0');
-            // 觸發自訂事件通知 Controller 重新計算效期
             hourDisplay.dispatchEvent(new Event('hourChanged'));
         };
 
@@ -76,21 +68,17 @@ export class UIManager {
             btnHourPlus.addEventListener('click', () => updateHour(1));
         }
 
-        // --- 修復：強制喚醒原生日曆 ---
         const mfdTrigger = document.getElementById('mfd-date-trigger');
         if (mfdTrigger) {
             mfdTrigger.addEventListener('click', () => {
                 try {
-                    // 使用現代 API 強制打開日曆
                     this.previewMfdInput.showPicker();
                 } catch (e) {
-                    // Fallback 機制
                     this.previewMfdInput.focus();
                 }
             });
         }
 
-        // --- 其他原有的張數、天數 Stepper 邏輯 ---
         this.btnQtyMinus.addEventListener('click', () => {
             let val = parseInt(this.qtyInput.value) || 1;
             this.qtyInput.value = val > 1 ? val - 1 : 1;
@@ -107,26 +95,8 @@ export class UIManager {
             if (val > 99) val = 99;
             e.target.value = val;
         });
-
-        this.btnCustomDaysMinus.addEventListener('click', () => {
-            let val = parseInt(this.customDaysInput.value) || 1;
-            this.customDaysInput.value = val > 1 ? val - 1 : 1;
-            this.customDaysInput.dispatchEvent(new Event('input')); 
-        });
-
-        this.btnCustomDaysPlus.addEventListener('click', () => {
-            let val = parseInt(this.customDaysInput.value) || 1;
-            this.customDaysInput.value = val < 999 ? val + 1 : 999;
-            this.customDaysInput.dispatchEvent(new Event('input')); 
-        });
-
-        this.customDaysInput.addEventListener('change', (e) => {
-            let val = parseInt(e.target.value);
-            if (isNaN(val) || val < 1) val = 1;
-            if (val > 999) val = 999;
-            e.target.value = val;
-            this.customDaysInput.dispatchEvent(new Event('input')); 
-        });
+        
+        // 🚨 架構師修正：已拔除 btnCustomDaysMinus 等所有相關事件監聽器
     }
 
     renderCategoryMenu(categories, onSelectCallback) {
@@ -192,7 +162,8 @@ export class UIManager {
         this.previewActiveState.classList.remove('opacity-0', 'pointer-events-none');
 
         this.previewItemName.innerText = itemData.labelName;
-        this.previewEmpName.innerText = this.employeeNameInput.value || '未填寫';
+        // 🚨 架構師修正：若無輸入，直接回傳空字串
+        this.previewEmpName.innerText = this.employeeNameInput.value || '';
 
         this.categorySelect.innerHTML = '';
         this.qtyInput.value = 1;
@@ -203,18 +174,7 @@ export class UIManager {
         this.previewEmptyState.classList.remove('opacity-0', 'pointer-events-none');
     }
 
-    toggleCustomCategoryUI(isShow) {
-        if (isShow) {
-            this.customCategoryContainer.classList.remove('hidden');
-            this.customCategoryContainer.classList.add('flex');
-        } else {
-            this.customCategoryContainer.classList.add('hidden');
-            this.customCategoryContainer.classList.remove('flex');
-            this.customCategoryInput.value = '';
-            // 💡 預設改為 36 小時
-            this.customDaysInput.value = '36';
-        }
-    }
+    // 🚨 架構師修正：已徹底移除 toggleCustomCategoryUI，不再操作不存在的 DOM
 
     toggleSettingsModal(isShow) {
         if (isShow) this.settingsModal.classList.remove('hidden');

@@ -1,7 +1,7 @@
 // sw.js (部分替換：最上方的常數與陣列設定)
 
 // 🚨 每次修改專案檔案後，務必手動更改此版本號 (例如 v1 -> v2) 才能觸發更新機制
-const CACHE_NAME = 'expiry-label-cache-v20260726-1';
+const CACHE_NAME = 'expiry-label-cache-v20260729-1';
 
 // 🚨 必須將所有在 index.html 載入的資源，以及 JS 內部 import 的檔案全數列入
 const FILES_TO_CACHE = [
