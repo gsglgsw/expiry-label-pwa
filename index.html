@@ -49,18 +49,21 @@
     </style>
 </head>
 
-    <!-- 🚨 完整還原：門市系統登入介面 (包含 Numpad) -->
+    <!-- 🚨 完整還原：門市系統登入介面 (修復 DOM ID 對應) -->
     <div id="login-view" class="fixed inset-0 z-50 flex flex-col items-center justify-center min-h-screen bg-gray-100 transition-opacity duration-500">
         <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-[90%] max-w-[400px]">
             <h2 class="text-2xl font-black text-center text-gray-800 mb-6 tracking-wider">門市系統登入</h2>
             
-            <!-- 密碼顯示區 -->
-            <div id="password-display" class="w-full h-14 mb-6 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-4xl tracking-[0.5em] font-black text-slate-800 flex items-center justify-center overflow-hidden">
+            <!-- 🚨 修復 1：ID 正名為 pin-display -->
+            <div id="pin-display" class="w-full h-14 mb-2 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-4xl tracking-[0.5em] font-black text-slate-800 flex items-center justify-center overflow-hidden">
                 <!-- JS 動態填入密碼星號 -->
             </div>
 
-            <!-- 數字鍵盤 (Numpad) -->
-            <div class="grid grid-cols-3 gap-3">
+            <!-- 🚨 修復 2：補回遺失的 login-error-msg 區塊 -->
+            <p id="login-error-msg" class="text-red-500 text-center mb-4 min-h-[24px] font-semibold opacity-0 transition-opacity"></p>
+
+            <!-- 🚨 修復 3：補上 Controller 綁定事件所需的 numpad-container -->
+            <div id="numpad-container" class="grid grid-cols-3 gap-3">
                 <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="1">1</button>
                 <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="2">2</button>
                 <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="3">3</button>
@@ -73,9 +76,9 @@
                 <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="8">8</button>
                 <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="9">9</button>
                 
-                <button id="btn-login-clear" class="bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 text-xl font-bold py-4 rounded-2xl shadow-sm transition-all">清除</button>
+                <button id="btn-login-clear" data-action="clear" class="numpad-btn bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 text-xl font-bold py-4 rounded-2xl shadow-sm transition-all">清除</button>
                 <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="0">0</button>
-                <button id="btn-login-submit" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-all">登入</button>
+                <button id="btn-login-submit" data-action="submit" class="numpad-btn bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-all">登入</button>
             </div>
         </div>
     </div>
