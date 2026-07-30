@@ -40,17 +40,17 @@ export class DateHelper {
         const mfdDate = new Date(mfdDateStr);
         mfdDate.setHours(mfdHour, 0, 0, 0);
 
-        // 格式化 MFD 輸出：例如 "MFD: 2026.07.18 (六) 14時"
+        // 🚨 核心修正：將 MFD 替換為「起:」
         const mY = mfdDate.getFullYear();
         const mM = String(mfdDate.getMonth() + 1).padStart(2, '0');
         const mD = String(mfdDate.getDate()).padStart(2, '0');
         const mDay = this.DAYS[mfdDate.getDay()];
         const mHStr = String(mfdDate.getHours()).padStart(2, '0');
-        const mfdPrint = `MFD: ${mY}.${mM}.${mD} (${mDay}) ${mHStr}時`;
+        const mfdPrint = `起: ${mY}.${mM}.${mD} (${mDay}) ${mHStr}時`;
 
         // 2. 計算 EXD 時間物件
         const exdDate = new Date(mfdDate.getTime());
-        // 🚨 這裡交給 JS 原生 Date 物件處理跨日/跨月邏輯，絕對安全
+        // 這裡交給 JS 原生 Date 物件處理跨日/跨月邏輯，絕對安全
         exdDate.setHours(exdDate.getHours() + hoursToAdd);
 
         let exH = exdDate.getHours();
@@ -62,7 +62,7 @@ export class DateHelper {
             exH = 24;
         }
 
-        // 格式化 EXD 輸出
+        // 🚨 核心修正：將 EXD 替換為「迄:」
         const eY = String(displayDate.getFullYear());
         const eM = String(displayDate.getMonth() + 1).padStart(2, '0');
         const eD = String(displayDate.getDate()).padStart(2, '0');
@@ -71,7 +71,7 @@ export class DateHelper {
 
         return {
             mfdPrint: mfdPrint,
-            exdPrintLine1: `EXD: ${eY}.${eM}.${eD} (${eDay})`,
+            exdPrintLine1: `迄: ${eY}.${eM}.${eD} (${eDay})`,
             exdPrintLine2: `${exHStr}時`
         };
     }

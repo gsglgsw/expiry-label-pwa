@@ -218,7 +218,7 @@ export class MainController {
 
    // src/controllers/MainController.js (僅節錄 recalculateEXD 進行覆蓋)
 
-    recalculateEXD() {
+   recalculateEXD() {
         if (!this.selectedItem) return;
         
         let mfdStr = this.ui.previewMfdInput.value;
@@ -242,7 +242,6 @@ export class MainController {
         const selectedVal = this.ui.categorySelect.value;
         let hoursToAdd = 0;
 
-        // 如果是 custom (手寫標籤)，不需要抓取時數
         if (selectedVal === 'cat1') {
             hoursToAdd = parseInt(this.selectedItem.expireHours1, 10) || 0;
         } else if (selectedVal === 'cat2') {
@@ -259,14 +258,13 @@ export class MainController {
 
         const isBlankItem = (categoryText === '空白' || this.selectedItem.internalId === 'SYS-BLANK');
         
-        // --- 🟢 核心修改：修復 MFD 標題遺失問題 ---
+        // --- 🟢 核心修改：靜態渲染畫面改用「起/迄」 ---
         if (isHandwriting) {
-            // 🚨 架構師修正：補上 MFD: 前綴字串
-            this.ui.previewMfdDisplay.innerText = 'MFD:     .   .   ';
-            this.ui.previewExdText.innerHTML = `EXD: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;時`;
+            this.ui.previewMfdDisplay.innerText = '起:      .   .   ';
+            this.ui.previewExdText.innerHTML = `迄: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;時`;
         } else if (isBlankItem) {
             this.ui.previewMfdDisplay.innerText = mfdPrint; 
-            this.ui.previewExdText.innerHTML = `EXD: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;時`;
+            this.ui.previewExdText.innerHTML = `迄: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;時`;
         } else {
             this.ui.previewMfdDisplay.innerText = mfdPrint;
             this.ui.previewExdText.innerHTML = `${exdPrintLine1}<br>${exdPrintLine2}`;
@@ -274,15 +272,15 @@ export class MainController {
 
         this.ui.previewCategoryText.innerText = isBlankItem ? '' : categoryText;
         
-        // --- 🟢 核心修改：打包給印表機的資料也要同步修正 ---
+        // --- 🟢 核心修改：打包給印表機的二進位字串同步改用「起/迄」 ---
         this.currentPrintData = {
-            // 🚨 架構師修正：補上 MFD: 前綴字串確保 ZPL/TSPL 正常列印
-            mfdPrint: isHandwriting ? 'MFD:     .   .   ' : mfdPrint,
+            mfdPrint: isHandwriting ? '起:      .   .   ' : mfdPrint,
             category: isBlankItem ? '' : `用途: ${categoryText}`,
-            exdLine1: (isHandwriting || isBlankItem) ? 'EXD:        .       .       ' : exdPrintLine1,
+            exdLine1: (isHandwriting || isBlankItem) ? '迄:         .       .       ' : exdPrintLine1,
             exdLine2: (isHandwriting || isBlankItem) ? '                       時' : exdPrintLine2
         };
     }
+    
     async handlePrintAction() {
         if (!this.selectedItem || !this.currentPrintData) return;
         
