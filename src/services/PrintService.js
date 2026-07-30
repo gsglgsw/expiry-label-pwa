@@ -176,13 +176,21 @@ class PrintService {
                 let byte = 0;
                 for (let bit = 0; bit < 8; bit++) {
                     const pixelX = x * 8 + bit;
+                    
                     if (pixelX < width) {
                         const index = (y * width + pixelX) * 4;
                         const brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
-                        // TSPL 中：1 為黑 (列印點)，0 為白 (不印點)
-                        if (brightness < 128) {
+                        
+                        // 🚨 架構師除錯修正：
+                        // TSPL (HPRT 實作) 中，0 代表黑點(印出)，1 代表白點(不印)
+                        // 因此，當像素亮度高 (白色背景) 時，我們將該 bit 設為 1
+                        if (brightness >= 128) {
                             byte |= (1 << (7 - bit));
                         }
+                    } else {
+                        // 🚨 防呆修正：處理寬度無法被 8 整除時的邊緣 Padding
+                        // 超出畫布邊緣的空位，必須強制填入 1 (白色)，否則標籤右側會出現黑線
+                        byte |= (1 << (7 - bit));
                     }
                 }
                 bitmapBytes[y * widthBytes + x] = byte;
