@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- 🚨 核心優化：鎖死縮放，並宣告 viewport-fit=cover 支援瀏海螢幕 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>效期標籤自動化系統</title>
 
@@ -12,20 +11,14 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="./assets/icon-192.png">
-    
-    <!-- 🚨 架構師修正：明確指定相對路徑的 favicon，阻斷瀏覽器去根目錄亂找的預設行為 -->
     <link rel="icon" type="image/png" href="./assets/icon-192.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* 🚨 核心優化：採用 100dvh (動態視窗高度)，無視手機網址列干擾 */
         body { user-select: none; overflow: hidden; height: 100dvh; }
-        
-        /* 隱藏橫向滾動條，但保留滾動功能 (適用於手機版導覽列) */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .scanner-trap { position: absolute; opacity: 0; pointer-events: none; }
         
         @media print {
@@ -49,20 +42,29 @@
     </style>
 </head>
 
-    <!-- 🚨 完整還原：門市系統登入介面 (修復 DOM ID 對應) -->
+<!-- 🚨 確保 <body> 標籤存在，這是網頁的骨架 -->
+<body class="bg-gray-100 text-gray-800 flex flex-col font-sans">
+
+    <!-- 全局 Loading 遮罩 -->
+    <div id="global-loading-overlay" class="fixed inset-0 bg-black/60 z-[9999] hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300">
+        <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p id="global-loading-text" class="text-white text-xl font-bold tracking-widest">載入中...</p>
+    </div>
+
+    <!-- 門市系統登入介面 (已包含正確的 Numpad 與 ID) -->
     <div id="login-view" class="fixed inset-0 z-50 flex flex-col items-center justify-center min-h-screen bg-gray-100 transition-opacity duration-500">
         <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-[90%] max-w-[400px]">
             <h2 class="text-2xl font-black text-center text-gray-800 mb-6 tracking-wider">門市系統登入</h2>
             
-            <!-- 🚨 修復 1：ID 正名為 pin-display -->
             <div id="pin-display" class="w-full h-14 mb-2 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-4xl tracking-[0.5em] font-black text-slate-800 flex items-center justify-center overflow-hidden">
                 <!-- JS 動態填入密碼星號 -->
             </div>
 
-            <!-- 🚨 修復 2：補回遺失的 login-error-msg 區塊 -->
             <p id="login-error-msg" class="text-red-500 text-center mb-4 min-h-[24px] font-semibold opacity-0 transition-opacity"></p>
 
-            <!-- 🚨 修復 3：補上 Controller 綁定事件所需的 numpad-container -->
             <div id="numpad-container" class="grid grid-cols-3 gap-3">
                 <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="1">1</button>
                 <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="2">2</button>
@@ -82,28 +84,21 @@
             </div>
         </div>
     </div>
-       <!-- 🚨 完整還原：全局 Loading 遮罩 (包含正確的 fixed 與 hidden 屬性) -->
-    <div id="global-loading-overlay" class="fixed inset-0 bg-black/60 z-[9999] hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300">
-        <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p id="global-loading-text" class="text-white text-xl font-bold tracking-widest">載入中...</p>
-    </div>
-    <!-- 🚨 請將這裡補回你遺失的登入畫面！ -->
-    <div id="login-view" class="fixed inset-0 z-50 flex flex-col items-center justify-center min-h-screen bg-gray-100 transition-opacity duration-500">
-        <!-- 裡面是你原本的數字鍵盤與登入 UI -->
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-[400px]">
-            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">門市系統登入</h2>
-            <!-- ... 保留你原本的 Numpad ... -->
+
+    <!-- 🚨 修復完成的未爆彈：總部特權彈窗 -->
+    <div id="super-admin-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div id="super-admin-card" class="bg-white p-6 rounded-2xl shadow-2xl w-[90%] max-w-[400px] transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">👑 總部特權登入</h3>
+            <label class="block text-sm font-bold text-gray-600 mb-2">請選擇模擬操作門市：</label>
+            <select id="super-store-select" class="w-full border-2 border-blue-200 rounded-xl p-3 mb-6 bg-blue-50 text-blue-800 font-bold focus:outline-none focus:border-blue-500"></select>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('super-admin-modal').classList.add('hidden')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-all">取消</button>
+                <button id="btn-super-enter" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition-all">進入系統</button>
+            </div>
         </div>
     </div>
 
-    <!-- 🚨 請將這裡補回你遺失的特權彈窗！ -->
-    <div id="super-admin-modal" class="hidden fixed inset-0 z-[100] ...">
-        <!-- ... 保留你原本的特權登入 UI ... -->
-    </div>
-    <!-- 🚨 架構優化：頂部狀態列，將系統設定與登出整合至此 -->
+    <!-- 頂部狀態列 -->
     <header class="bg-slate-800 text-white h-[60px] px-4 md:px-6 flex justify-between items-center shadow-md shrink-0 z-20 relative">
         <div class="text-lg md:text-xl font-bold tracking-wider truncate">
             🏷️ 標籤系統
@@ -125,15 +120,14 @@
         </div>
     </header>
 
-    <!-- 🚨 架構優化：主視覺區 (改為 Column 排列，以支援小螢幕頂部導覽列) -->
+    <!-- 主視覺區 -->
     <main class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-gray-50 relative">
         
-        <!-- 🚨 分類導覽列 (小螢幕：頂部橫向滑動 / 大螢幕：左側直向固定) -->
+        <!-- 分類導覽列 -->
         <aside class="w-full lg:w-48 bg-slate-800 text-white flex-shrink-0 z-10 flex flex-col shadow-md lg:shadow-2xl">
             <div class="hidden lg:block p-4 text-center border-b border-slate-700 shrink-0">
                 <span class="font-bold tracking-widest text-slate-300">商品分類</span>
             </div>
-            <!-- ul 加上橫向滑動屬性 -->
             <ul id="category-menu" class="flex flex-row overflow-x-auto lg:flex-col lg:overflow-y-auto w-full hide-scrollbar snap-x">
                 <!-- JS 注入分類 -->
             </ul>
@@ -149,7 +143,6 @@
                 </div>
             </div>
 
-            <!-- 🚨 商品清單容器：依尺寸自適應列數 -->
             <div id="item-grid-container" class="flex-1 overflow-y-auto p-4 md:p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5 content-start">
                 <div class="col-span-full text-center text-gray-400 text-xl font-bold mt-10">等待載入資料庫...</div>
             </div>
@@ -158,7 +151,7 @@
         <!-- 遮罩層 -->
         <div id="drawer-backdrop" class="fixed inset-0 bg-slate-900/60 z-30 hidden lg:hidden backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
 
-        <!-- 🚨 右側列印抽屜 (100dvh 高度保護，確保不會被手機工具列吃掉) -->
+        <!-- 右側列印抽屜 -->
         <aside id="print-drawer" class="fixed inset-y-0 right-0 z-40 w-[90%] max-w-[400px] lg:w-[400px] bg-white border-l border-gray-200 shadow-2xl lg:shadow-none flex flex-col transform translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 shrink-0 h-[100dvh] lg:h-auto pb-[env(safe-area-inset-bottom)]">
             
             <div class="lg:hidden flex justify-between items-center p-3 border-b border-gray-200 bg-slate-50 shrink-0">
@@ -168,7 +161,6 @@
 
             <div class="p-4 border-b border-gray-100 bg-slate-50 shrink-0">
                 <label class="block text-gray-500 text-xs font-bold mb-1">🧑‍🍳 當班員工</label>
-                <!-- 縮小輸入框佔比 -->
                 <input type="text" id="employee-name" placeholder="請輸入姓名..." class="w-full text-xl font-black border-2 border-gray-300 rounded-xl p-2 focus:border-blue-500 focus:outline-none text-center bg-white shadow-inner">
             </div>
 
@@ -179,8 +171,6 @@
                 </div>
 
                 <div id="preview-active-state" class="opacity-0 pointer-events-none transition-opacity duration-300 flex-1 flex flex-col p-4">
-                    
-                    <!-- 🚨 核心優化：使用 flex 置中，並透過 scale-[0.85] 縮小預覽框體，避免小手機爆版 -->
                     <div class="w-full flex justify-center transform scale-[0.85] sm:scale-[0.9] lg:scale-100 origin-top">
                         <div class="border-2 border-slate-700 rounded-xl p-5 bg-white shadow-sm flex flex-col shrink-0" style="width: 350px; height: 280px;">
                             <div class="text-sm text-gray-600 font-bold mb-2">
@@ -236,8 +226,6 @@
             </div>
         </aside>
     </main>
-
-    <!-- (省略系統設定彈窗模組 #settings-modal) -->
 
     <script type="module" src="./src/app.js"></script>
     <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-3 pointer-events-none"></div>
