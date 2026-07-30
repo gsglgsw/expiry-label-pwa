@@ -138,8 +138,13 @@ export class UIManager {
 
     createCategoryElement(name, isActive) {
         const li = document.createElement('li');
-        const baseClasses = "p-5 text-xl font-bold text-center border-b border-slate-700 cursor-pointer transition-colors active:bg-slate-600";
-        li.className = isActive ? `${baseClasses} bg-blue-600` : `${baseClasses} hover:bg-slate-700 text-slate-300`;
+        // 🚨 核心優化：手機端顯示為橫向 Pill 樣式，桌面端顯示為整列 Block 樣式
+        const baseClasses = "flex-shrink-0 px-5 py-3 lg:py-5 text-lg font-bold text-center border-b-4 lg:border-b border-transparent cursor-pointer transition-colors snap-center whitespace-nowrap";
+        
+        li.className = isActive 
+            ? `${baseClasses} text-white border-b-blue-400 lg:border-b-slate-700 bg-blue-600` 
+            : `${baseClasses} text-slate-300 hover:text-white hover:bg-slate-700 lg:border-b-slate-700`;
+            
         li.innerText = name;
         li.dataset.category = name;
         return li;
@@ -155,13 +160,13 @@ export class UIManager {
 
         items.forEach(item => {
             const card = document.createElement('div');
-            card.className = "bg-white p-6 rounded-2xl shadow-sm border-2 border-transparent hover:border-blue-400 hover:shadow-md cursor-pointer transition-all active:scale-95 flex flex-col justify-between aspect-square";
+            // 🚨 核心優化：改為清單按鍵設計，設定最小高度，移除原本強制的 aspect-square
+            card.className = "bg-white px-2 py-4 md:px-4 md:py-5 rounded-2xl shadow-sm border-2 border-slate-200 hover:border-blue-500 cursor-pointer transition-all active:scale-95 flex items-center justify-center min-h-[80px] md:min-h-[100px]";
+            
+            // 🚨 核心優化：只留下商品名稱。加入 break-words 與 leading-tight 確保長文字自動換行且不會吃字
             card.innerHTML = `
-                <div class="text-sm font-bold text-gray-400 truncate">${item.brandName || ''}</div>
-                <div class="text-2xl font-black text-gray-800 line-clamp-2 mt-2 leading-tight">${item.labelName}</div>
-                <div class="mt-auto pt-4 flex justify-between items-end border-t border-gray-100">
-                    <span class="text-xs font-bold text-gray-400">${item.internalId || ''}</span>
-                    <span class="text-sm font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-lg">${item.category1}</span>
+                <div class="text-lg md:text-xl font-black text-gray-800 leading-snug break-words text-center w-full">
+                    ${item.labelName}
                 </div>
             `;
             card.addEventListener('click', () => onSelectCallback(item));

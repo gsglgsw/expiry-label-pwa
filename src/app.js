@@ -34,9 +34,13 @@ async function initApp() {
             const storeName = localStorage.getItem('storeName');
             console.log(`⚡ 偵測到已登入身分 (${storeName})，觸發自動登入機制...`);
             
-            // 強制隱藏登入介面
+            // 🛡️ 架構師防禦性編程：確認節點存在才操作，避免報錯[cite: 11]
             const loginView = document.getElementById('login-view');
-            loginView.classList.add('hidden', 'opacity-0', 'pointer-events-none');
+            if (loginView) {
+                loginView.classList.add('hidden', 'opacity-0', 'pointer-events-none');
+            } else {
+                console.warn('⚠️ [架構警告] 找不到 #login-view 節點，請確認 index.html 是否正確引入！');
+            }
             
             // 直接實例化主系統
             const uiManager = new UIManager();
