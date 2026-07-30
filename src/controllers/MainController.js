@@ -216,6 +216,8 @@ export class MainController {
         this.recalculateEXD();
     }
 
+   // src/controllers/MainController.js (僅節錄 recalculateEXD 進行覆蓋)
+
     recalculateEXD() {
         if (!this.selectedItem) return;
         
@@ -240,7 +242,7 @@ export class MainController {
         const selectedVal = this.ui.categorySelect.value;
         let hoursToAdd = 0;
 
-        // 🚨 架構師修正：如果是 custom (手寫標籤)，不需要抓取時數
+        // 如果是 custom (手寫標籤)，不需要抓取時數
         if (selectedVal === 'cat1') {
             hoursToAdd = parseInt(this.selectedItem.expireHours1, 10) || 0;
         } else if (selectedVal === 'cat2') {
@@ -257,9 +259,10 @@ export class MainController {
 
         const isBlankItem = (categoryText === '空白' || this.selectedItem.internalId === 'SYS-BLANK');
         
-        // --- 🟢 核心修改：處理畫面的預覽顯示 (雙留白排版) ---
+        // --- 🟢 核心修改：修復 MFD 標題遺失問題 ---
         if (isHandwriting) {
-            this.ui.previewMfdDisplay.innerText = '    .   .   ';
+            // 🚨 架構師修正：補上 MFD: 前綴字串
+            this.ui.previewMfdDisplay.innerText = 'MFD:     .   .   ';
             this.ui.previewExdText.innerHTML = `EXD: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;時`;
         } else if (isBlankItem) {
             this.ui.previewMfdDisplay.innerText = mfdPrint; 
@@ -271,15 +274,15 @@ export class MainController {
 
         this.ui.previewCategoryText.innerText = isBlankItem ? '' : categoryText;
         
-        // --- 🟢 核心修改：打包給印表機的資料 (確保 ZPL 收到空白的字串) ---
+        // --- 🟢 核心修改：打包給印表機的資料也要同步修正 ---
         this.currentPrintData = {
-            mfdPrint: isHandwriting ? '    .   .   ' : mfdPrint,
+            // 🚨 架構師修正：補上 MFD: 前綴字串確保 ZPL/TSPL 正常列印
+            mfdPrint: isHandwriting ? 'MFD:     .   .   ' : mfdPrint,
             category: isBlankItem ? '' : `用途: ${categoryText}`,
             exdLine1: (isHandwriting || isBlankItem) ? 'EXD:        .       .       ' : exdPrintLine1,
             exdLine2: (isHandwriting || isBlankItem) ? '                       時' : exdPrintLine2
         };
     }
-
     async handlePrintAction() {
         if (!this.selectedItem || !this.currentPrintData) return;
         
