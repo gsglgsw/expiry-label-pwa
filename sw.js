@@ -1,59 +1,60 @@
-// sw.js (部分替換：最上方的常數與陣列設定)
+// sw.js (Production-Ready 彈性快取架構)
 
-// 🚨 每次修改專案檔案後，務必手動更改此版本號 (例如 v1 -> v2) 才能觸發更新機制
-const CACHE_NAME = 'expiry-label-cache-v20260730-10';
+// 🚨 已更新版本號以強制觸發瀏覽器更新
+const CACHE_NAME = 'expiry-label-cache-v20260730-11';
 
-// 🚨 必須將所有在 index.html 載入的資源，以及 JS 內部 import 的檔案全數列入
+// 🚨 架構師修正：全部改為相對路徑 './'，完美適應 GitHub Pages 子目錄
 const FILES_TO_CACHE = [
-    '/',
-    '/index.html',
-    '/manifest.json',
-    '/favicon.ico',
-    // 樣式與圖示
-    '/assets/icon-192.png',
-    '/assets/icon-512.png',
-    // 核心 JS 進入點
-    '/src/app.js',
-    '/src/config.js',
-    // Controllers
-    '/src/controllers/LoginController.js',
-    '/src/controllers/MainController.js',
-    // Models
-    '/src/models/Database.js',
-    // Services (本次補齊)
-    '/src/services/AuthService.js',
-    '/src/services/PrintService.js',
-    // Utils (本次補齊)
-    '/src/utils/DateHelper.js',
-    '/src/utils/DeviceManager.js',
-    '/src/utils/Scanner.js',
-    // Views
-    '/src/views/UI.js'
+    './',
+    './index.html',
+    './manifest.json',
+    './favicon.ico',
+    './assets/icon-192.png',
+    './assets/icon-512.png',
+    './src/app.js',
+    './src/config.js',
+    './src/controllers/LoginController.js',
+    './src/controllers/MainController.js',
+    './src/models/Database.js',
+    './src/services/AuthService.js',
+    './src/services/PrintService.js',
+    './src/utils/DateHelper.js',
+    './src/utils/DeviceManager.js',
+    './src/utils/Scanner.js',
+    './src/views/UI.js'
 ];
 
-// 1. 安裝階段 (Install)
+// 1. 安裝階段 (Install) - 導入彈性快取
 self.addEventListener('install', (evt) => {
     console.log('[ServiceWorker] 正在安裝新版本...');
     
-    // 🌟 核心魔法 1：強制跳過等待階段，立刻進入啟用狀態
+    // 強制跳過等待階段，立刻進入啟用狀態
     self.skipWaiting(); 
     
     evt.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('[ServiceWorker] 預先快取離線檔案');
-            return cache.addAll(FILES_TO_CACHE);
+        caches.open(CACHE_NAME).then(async (cache) => {
+            console.log('[ServiceWorker] 開始逐一快取離線檔案...');
+            
+            // 🌟 架構師核心升級：放棄脆弱的 cache.addAll，改用迴圈逐一抓取
+            for (const asset of FILES_TO_CACHE) {
+                try {
+                    await cache.add(asset);
+                } catch (error) {
+                    // 🛡️ 防禦性編程：即便單一檔案 404，也只發出警告，絕不中斷整體安裝流程
+                    console.warn(`⚠️ [Service Worker] 無法快取資源 (略過): ${asset}`, error.message);
+                }
+            }
         })
     );
 });
 
-// 2. 啟用階段 (Activate)
+// 2. 啟用階段 (Activate) - 清理舊快取
 self.addEventListener('activate', (evt) => {
     console.log('[ServiceWorker] 新版本已啟用，準備接管系統...');
     
     evt.waitUntil(
-        // 🌟 核心魔法 2：立刻控制所有目前打開的瀏覽器客戶端
+        // 立刻控制所有目前打開的瀏覽器客戶端
         self.clients.claim().then(() => {
-            // 清理舊版本的快取垃圾
             return caches.keys().then((keyList) => {
                 return Promise.all(keyList.map((key) => {
                     if (key !== CACHE_NAME) {
@@ -66,24 +67,23 @@ self.addEventListener('activate', (evt) => {
     );
 });
 
-// 🟢 階段 3：網路請求攔截器 (Cache-First 策略)
+// 3. 網路請求攔截器 (Cache-First 策略)
 self.addEventListener('fetch', (event) => {
-    // 🚨 絕對不快取 GAS 的 API 請求，否則資料庫會無法同步！
+    // 絕對不快取 GAS 的 API 請求
     if (event.request.url.includes('script.google.com')) {
         return; 
     }
 
-    // 離線優先邏輯：先找快取，找不到才去網路抓
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) {
-                return cachedResponse; // 命中快取，0.1 秒極速回傳
+                return cachedResponse; // 命中快取
             }
-            return fetch(event.request); // 沒中快取，正常發送網路請求
+            return fetch(event.request); // 沒中快取，發送網路請求
         }).catch(() => {
             console.error('❌ [Service Worker] 離線狀態且無快取檔案:', event.request.url);
             
-            // 💡 架構師修復：偽造一個標準的 Response 物件還給瀏覽器，避免 Uncaught TypeError
+            // 偽造一個標準的 Response 物件還給瀏覽器，避免 Uncaught TypeError
             return new Response(
                 JSON.stringify({ success: false, message: '系統處於離線狀態，請求已被攔截' }), 
                 { 
