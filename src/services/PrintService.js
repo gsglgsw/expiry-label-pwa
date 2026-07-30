@@ -10,75 +10,54 @@ class PrintService {
         if (lang === 'ZPL') {
             return await this.generateZPLGraphic(printData, qty);
         }
-        // Fallback 
-        return this.generateTSPL(printData, qty);
+        // 🚨 核心升級：TSPL 也不再使用文字模式，全面導入圖形渲染引擎
+        return await this.generateTSPLGraphic(printData, qty);
     }
 
     /**
      * 🎨 [核心渲染層] ZPL 圖形渲染引擎 (Canvas 轉 ASCII Hex)
      */
-    /**
-     * 🎨 [核心渲染層] ZPL 圖形渲染引擎 (Canvas 轉 ASCII Hex)
-     */
     async generateZPLGraphic(printData, qty) {
-        // 1. 建立實體紙張畫布 (物理寬度 320 dots, 物理高度 392 dots)
+        // ... (ZPL 邏輯保持不變，為節省版面此處省略內部實作，請保留你原本的 ZPL 程式碼) ...
         const canvas = document.createElement('canvas');
         canvas.width = 320;
         canvas.height = 392;
         const ctx = canvas.getContext('2d');
 
-        // 🚨 核心修正：將畫布順時針旋轉 90 度，實現橫向排版 (Landscape)
         ctx.save();
         ctx.translate(canvas.width, 0); 
         ctx.rotate(90 * Math.PI / 180); 
 
-        // ==========================================
-        // 📐 旋轉後的邏輯座標系：X 軸最大值 392，Y 軸最大值 320
-        // ==========================================
         const LOGICAL_WIDTH = 392;
         const LOGICAL_HEIGHT = 320;
 
-        // 填滿白底 (覆蓋整個邏輯畫布)
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-
         ctx.fillStyle = '#000000';
         ctx.textBaseline = 'top';
 
-        // --- 區塊 1：左上角 (員工與 MFD 資訊) ---
         ctx.textAlign = 'left';
-        
-        ctx.font = '20px sans-serif'; // 小字體
+        ctx.font = '20px sans-serif'; 
         ctx.fillText(`員工: ${printData.empName}`, 15, 15);
-        
-        ctx.font = '22px sans-serif'; // 次小字體
-        // MFD 靠左對齊，從 X=15 開始，擁有 377 dots 的寬廣空間，絕對不會再被切斷
+        ctx.font = '22px sans-serif'; 
         ctx.fillText(`${printData.mfdPrint}`, 15, 45); 
 
-        // --- 區塊 2：中間層 (品名靠左、類別靠右) ---
-        ctx.font = 'bold 44px sans-serif'; // 品名極大字體
+        ctx.font = 'bold 44px sans-serif'; 
         ctx.fillText(printData.itemName, 15, 100);
 
-        ctx.textAlign = 'right'; // 🟢 切換為靠右對齊
+        ctx.textAlign = 'right'; 
         ctx.font = '24px sans-serif';
-        // 貼齊右邊界 (392 - 15 = 377)，Y 軸稍微下沉與品名底部對齊
         ctx.fillText(printData.category, 377, 115); 
 
-        // --- 區塊 3：底層 EXD (視覺焦點，置中特大字體) ---
-        ctx.textAlign = 'center'; // 🟢 切換為置中對齊
+        ctx.textAlign = 'center'; 
         ctx.font = 'bold 40px sans-serif'; 
-        
-        // 放置在畫布正中間 (X = 392 / 2 = 196)
         ctx.fillText(printData.exdLine1, LOGICAL_WIDTH / 2, 180);
         ctx.fillText(printData.exdLine2, LOGICAL_WIDTH / 2, 230);
+        ctx.restore(); 
 
-        ctx.restore(); // 恢復原始畫布狀態，準備進行像素轉換
-
-        // 2. 獲取像素並轉為 16 進位字串
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const { hexString, widthBytes, height, totalBytes } = this._convertImageDataToHex(imageData);
 
-        // 3. 組合 ZPL 實體控制指令
         const zplCommand = `
 ^XA
 ^PW320
@@ -88,18 +67,109 @@ class PrintService {
 ^PQ${qty}
 ^XZ
         `.trim();
-
         return zplCommand.replace(/\r?\n/g, '\r\n') + '\r\n';
     }
 
     /**
-     * 🔧 [底層轉碼器] 將 RGBA 轉為 ZPL 認得的 1BPP 黑白 16 進位字串
+     * 🎨 [核心渲染層] TSPL 圖形渲染引擎 (Canvas 轉 Base64 二進位)
      */
+    async generateTSPLGraphic(printData, qty) {
+        // 1. 建立實體畫布 (40mm x 50mm, 203dpi = 320 x 400 dots)
+        const canvas = document.createElement('canvas');
+        canvas.width = 320;
+        canvas.height = 400;
+        const ctx = canvas.getContext('2d');
+
+        // 🚨 核心修正：將畫布順時針旋轉 90 度，實現橫向排版 (Landscape)
+        ctx.save();
+        ctx.translate(canvas.width, 0); 
+        ctx.rotate(90 * Math.PI / 180); 
+
+        // 📐 旋轉後的邏輯座標系：X 軸 400 (長度), Y 軸 320 (寬度)
+        const LOGICAL_WIDTH = 400;
+        const LOGICAL_HEIGHT = 320;
+
+        // 填滿白底，清除雜訊
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+
+        ctx.fillStyle = '#000000';
+        ctx.textBaseline = 'top';
+
+        // --- 繪製版面 ---
+        ctx.textAlign = 'left';
+        ctx.font = '22px sans-serif'; 
+        ctx.fillText(`員工: ${printData.empName}`, 15, 15);
+        ctx.font = '24px sans-serif'; 
+        ctx.fillText(`${printData.mfdPrint}`, 15, 50); 
+
+        ctx.font = 'bold 46px sans-serif'; 
+        ctx.fillText(printData.itemName, 15, 110);
+
+        ctx.textAlign = 'right'; 
+        ctx.font = '26px sans-serif';
+        ctx.fillText(printData.category, LOGICAL_WIDTH - 15, 125); 
+
+        ctx.textAlign = 'center'; 
+        ctx.font = 'bold 42px sans-serif'; 
+        ctx.fillText(printData.exdLine1, LOGICAL_WIDTH / 2, 200);
+        ctx.fillText(printData.exdLine2, LOGICAL_WIDTH / 2, 250);
+
+        ctx.restore(); 
+
+        // 2. 獲取像素並轉為 TSPL 專用的 1BPP 二進位陣列
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const { bitmapBytes, widthBytes, height } = this._convertImageDataToBinary(imageData);
+
+        // 3. 組合 TSPL 實體控制指令 (設定尺寸、間距與清除緩衝區)
+        const header = `SIZE 40 mm, 50 mm\r\nGAP 2 mm, 0\r\nDIRECTION 1\r\nCLS\r\nBITMAP 0,0,${widthBytes},${height},0,`;
+        const footer = `\r\nPRINT 1,${qty}\r\n`;
+
+        // 4. 打包為二進位 Payload
+        const encoder = new TextEncoder();
+        const headerBytes = encoder.encode(header);
+        const footerBytes = encoder.encode(footer);
+
+        const payload = new Uint8Array(headerBytes.length + bitmapBytes.length + footerBytes.length);
+        payload.set(headerBytes, 0);
+        payload.set(bitmapBytes, headerBytes.length);
+        payload.set(footerBytes, headerBytes.length + bitmapBytes.length);
+
+        // 5. 轉換為 Base64 字串，並加上特殊前綴，交由中介層解碼
+        const base64String = this._uint8ToBase64(payload);
+        return `__BASE64__${base64String}`;
+    }
+
     _convertImageDataToHex(imageData) {
+        // ... (保留原有的 ZPL 轉碼邏輯) ...
         const { data, width, height } = imageData;
         let hexString = '';
         const widthBytes = Math.ceil(width / 8);
         const totalBytes = widthBytes * height;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < widthBytes; x++) {
+                let byte = 0;
+                for (let bit = 0; bit < 8; bit++) {
+                    const pixelX = x * 8 + bit;
+                    if (pixelX < width) {
+                        const index = (y * width + pixelX) * 4;
+                        const brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
+                        if (brightness < 128) byte |= (1 << (7 - bit));
+                    }
+                }
+                hexString += byte.toString(16).padStart(2, '0').toUpperCase();
+            }
+        }
+        return { hexString, widthBytes, height, totalBytes };
+    }
+
+    /**
+     * 🔧 [底層轉碼器] 將 RGBA 轉為 TSPL 專用的 1BPP 二進位陣列
+     */
+    _convertImageDataToBinary(imageData) {
+        const { data, width, height } = imageData;
+        const widthBytes = Math.ceil(width / 8);
+        const bitmapBytes = new Uint8Array(widthBytes * height);
 
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < widthBytes; x++) {
@@ -109,41 +179,32 @@ class PrintService {
                     if (pixelX < width) {
                         const index = (y * width + pixelX) * 4;
                         const brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
-                        // ZPL 中：1 為黑 (列印點)，0 為白 (不印點)
+                        // TSPL 中：1 為黑 (列印點)，0 為白 (不印點)
                         if (brightness < 128) {
                             byte |= (1 << (7 - bit));
                         }
                     }
                 }
-                hexString += byte.toString(16).padStart(2, '0').toUpperCase();
+                bitmapBytes[y * widthBytes + x] = byte;
             }
         }
-        return { hexString, widthBytes, height, totalBytes };
+        return { bitmapBytes, widthBytes, height };
     }
 
-    generateTSPL(printData, qty) {
-        // ... (保留你原有的 TSPL 備援邏輯) ...
-        const tsplCommand = `
-SIZE 40 mm, 50 mm
-GAP 2 mm, 0
-CLS
-TEXT 10,20,"TST24.BF2",0,1,1,"員工: ${printData.empName}"
-TEXT 10,60,"TST24.BF2",0,1,1,"${printData.mfdPrint}"
-TEXT 10,130,"TST24.BF2",0,2,2,"${printData.itemName}"
-TEXT 220,150,"TST24.BF2",0,1,1,"${printData.category}"
-TEXT 30,240,"TST24.BF2",0,1,1,"${printData.exdLine1}"
-TEXT 130,290,"TST24.BF2",0,1,1,"${printData.exdLine2}"
-PRINT 1,${qty}
-        `.trim();
-        return tsplCommand.replace(/\r?\n/g, '\r\n') + '\r\n';
+    _uint8ToBase64(uint8Array) {
+        let binary = '';
+        const len = uint8Array.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(uint8Array[i]);
+        }
+        return window.btoa(binary);
     }
 
     /**
-     * 📡 [網路通訊層] 回歸最單純的字串傳送
+     * 📡 [網路通訊層] 
      */
     async sendPrintJob(middlewareIp, printerIp, command) {
         const apiUrl = `http://${middlewareIp}:3000/api/print`;
-
         try {
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -153,7 +214,7 @@ PRINT 1,${qty}
                 },
                 body: JSON.stringify({
                     printerIp: printerIp,
-                    printCommand: command // 單純傳送編譯好的 ZPL 字串
+                    printCommand: command // 若為圖形模式，此時夾帶的會是 __BASE64__ 字串
                 })
             });
 
