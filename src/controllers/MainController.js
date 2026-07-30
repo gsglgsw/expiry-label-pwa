@@ -280,7 +280,7 @@ export class MainController {
             exdLine2: (isHandwriting || isBlankItem) ? '                       時' : exdPrintLine2
         };
     }
-    
+
     async handlePrintAction() {
         if (!this.selectedItem || !this.currentPrintData) return;
         
@@ -320,6 +320,7 @@ export class MainController {
             btn.innerHTML = originalText;
             btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
+        this.ui.toggleDrawer(false);
     }
 
     extractUniqueCategories(items) {

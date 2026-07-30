@@ -11,6 +11,11 @@ export class UIManager {
         this.previewEmptyState = document.getElementById('preview-empty-state');
         this.previewActiveState = document.getElementById('preview-active-state');
         
+        // 🚨 新增：抽屜與遮罩層 DOM 綁定
+        this.printDrawer = document.getElementById('print-drawer');
+        this.drawerBackdrop = document.getElementById('drawer-backdrop');
+        this.btnCloseDrawer = document.getElementById('btn-close-drawer');
+        
         this.previewEmpName = document.getElementById('preview-emp-name');
         this.previewItemName = document.getElementById('preview-item-name');
         this.previewCategoryText = document.getElementById('preview-category-text');
@@ -22,15 +27,12 @@ export class UIManager {
         this.btnQtyPlus = document.getElementById('btn-qty-plus');
         this.btnPrint = document.getElementById('btn-print');
         
-        // 🚨 架構師修正：已徹底刪除自訂用途面板的所有 DOM 綁定，避免記憶體洩漏與報錯
-        
         this.btnOpenSettings = document.getElementById('btn-open-settings');
         this.settingsModal = document.getElementById('settings-modal');
         this.printerIpInput = document.getElementById('printer-ip-input');
         this.btnCloseSettings = document.getElementById('btn-close-settings');
         this.btnSaveSettings = document.getElementById('btn-save-settings');
 
-        // MFD 控制 DOM
         this.previewMfdDisplay = document.getElementById('preview-mfd-display');
         this.previewMfdInput = document.getElementById('preview-mfd-input');
         this.previewMfdHourSelect = document.getElementById('preview-mfd-hour-select');
@@ -43,11 +45,15 @@ export class UIManager {
     
     initBasicUIEvents() {
         this.employeeNameInput.addEventListener('input', (e) => {
-            // 🚨 架構師修正：若無輸入，直接回傳空字串
             this.previewEmpName.innerText = e.target.value || '';
         });
 
-        // --- MFD 小時 Stepper 邏輯 ---
+        // 🚨 綁定雙重防呆關閉機制
+        if (this.drawerBackdrop && this.btnCloseDrawer) {
+            this.drawerBackdrop.addEventListener('click', () => this.toggleDrawer(false));
+            this.btnCloseDrawer.addEventListener('click', () => this.toggleDrawer(false));
+        }
+
         const btnHourMinus = document.getElementById('btn-mfd-hour-minus');
         const btnHourPlus = document.getElementById('btn-mfd-hour-plus');
         const hourDisplay = document.getElementById('preview-mfd-hour-display');
@@ -95,8 +101,26 @@ export class UIManager {
             if (val > 99) val = 99;
             e.target.value = val;
         });
+    }
+
+    // 🚨 新增：處理抽屜面板的開關狀態與動畫
+    toggleDrawer(isShow) {
+        if (!this.printDrawer || !this.drawerBackdrop) return;
         
-        // 🚨 架構師修正：已拔除 btnCustomDaysMinus 等所有相關事件監聽器
+        if (isShow) {
+            this.drawerBackdrop.classList.remove('hidden');
+            // 強制瀏覽器重繪 (Reflow)，確保 CSS Transition 能正常觸發
+            void this.drawerBackdrop.offsetWidth;
+            this.drawerBackdrop.classList.remove('opacity-0');
+            this.printDrawer.classList.remove('translate-x-full');
+        } else {
+            this.printDrawer.classList.add('translate-x-full');
+            this.drawerBackdrop.classList.add('opacity-0');
+            // 等待動畫結束後，將遮罩徹底隱藏避免阻擋點擊
+            setTimeout(() => {
+                this.drawerBackdrop.classList.add('hidden');
+            }, 300);
+        }
     }
 
     renderCategoryMenu(categories, onSelectCallback) {
@@ -162,19 +186,22 @@ export class UIManager {
         this.previewActiveState.classList.remove('opacity-0', 'pointer-events-none');
 
         this.previewItemName.innerText = itemData.labelName;
-        // 🚨 架構師修正：若無輸入，直接回傳空字串
         this.previewEmpName.innerText = this.employeeNameInput.value || '';
 
         this.categorySelect.innerHTML = '';
         this.qtyInput.value = 1;
+        
+        // 🚨 核心邏輯：當選擇商品後，自動彈出列印抽屜 (僅在小螢幕作用，大螢幕會因 Tailwind 覆蓋而無視)
+        this.toggleDrawer(true);
     }
 
     resetToEmptyState() {
         this.previewActiveState.classList.add('opacity-0', 'pointer-events-none');
         this.previewEmptyState.classList.remove('opacity-0', 'pointer-events-none');
+        
+        // 🚨 核心邏輯：當取消選擇時，自動收合抽屜
+        this.toggleDrawer(false);
     }
-
-    // 🚨 架構師修正：已徹底移除 toggleCustomCategoryUI，不再操作不存在的 DOM
 
     toggleSettingsModal(isShow) {
         if (isShow) this.settingsModal.classList.remove('hidden');
