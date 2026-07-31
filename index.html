@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>效期標籤自動化系統</title>
 
     <link rel="manifest" href="./manifest.json">
@@ -16,18 +17,59 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        body { user-select: none; overflow: hidden; height: 100dvh; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .scanner-trap { position: absolute; opacity: 0; pointer-events: none; }
-        
+        body {
+            user-select: none;
+            overflow: hidden;
+            height: 100dvh;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .scanner-trap {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
         @media print {
-            body * { visibility: hidden; }
-            #print-container, #print-container * { visibility: visible; }
-            #qr-print-container, #qr-print-container * { visibility: visible; }
-            #print-container, #qr-print-container { position: absolute; left: 0; top: 0; width: 100%; }
-            .print-hide-ui { display: none !important; }
-            #print-only-category, #print-only-mfd { display: block !important; }
+            body * {
+                visibility: hidden;
+            }
+
+            #print-container,
+            #print-container * {
+                visibility: visible;
+            }
+
+            #qr-print-container,
+            #qr-print-container * {
+                visibility: visible;
+            }
+
+            #print-container,
+            #qr-print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            .print-hide-ui {
+                display: none !important;
+            }
+
+            #print-only-category,
+            #print-only-mfd {
+                display: block !important;
+            }
+
             .print-label-page {
                 page-break-after: always;
                 border: 1px solid #333333 !important;
@@ -37,84 +79,130 @@
                 margin-bottom: 20px;
                 background: white !important;
             }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
 
 <!-- 🚨 確保 <body> 標籤存在，這是網頁的骨架 -->
+
 <body class="bg-gray-100 text-gray-800 flex flex-col font-sans">
 
     <!-- 全局 Loading 遮罩 -->
-    <div id="global-loading-overlay" class="fixed inset-0 bg-black/60 z-[9999] hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300">
-        <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <div id="global-loading-overlay"
+        class="fixed inset-0 bg-black/60 z-[9999] hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300">
+        <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
         </svg>
         <p id="global-loading-text" class="text-white text-xl font-bold tracking-widest">載入中...</p>
     </div>
 
     <!-- 門市系統登入介面 (已包含正確的 Numpad 與 ID) -->
-    <div id="login-view" class="fixed inset-0 z-50 flex flex-col items-center justify-center min-h-screen bg-gray-100 transition-opacity duration-500">
+    <div id="login-view"
+        class="fixed inset-0 z-50 flex flex-col items-center justify-center min-h-screen bg-gray-100 transition-opacity duration-500">
         <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-[90%] max-w-[400px]">
             <h2 class="text-2xl font-black text-center text-gray-800 mb-6 tracking-wider">門市系統登入</h2>
-            
-            <div id="pin-display" class="w-full h-14 mb-2 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-4xl tracking-[0.5em] font-black text-slate-800 flex items-center justify-center overflow-hidden">
+
+            <div id="pin-display"
+                class="w-full h-14 mb-2 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-4xl tracking-[0.5em] font-black text-slate-800 flex items-center justify-center overflow-hidden">
                 <!-- JS 動態填入密碼星號 -->
             </div>
 
-            <p id="login-error-msg" class="text-red-500 text-center mb-4 min-h-[24px] font-semibold opacity-0 transition-opacity"></p>
+            <p id="login-error-msg"
+                class="text-red-500 text-center mb-4 min-h-[24px] font-semibold opacity-0 transition-opacity"></p>
 
             <div id="numpad-container" class="grid grid-cols-3 gap-3">
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="1">1</button>
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="2">2</button>
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="3">3</button>
-                
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="4">4</button>
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="5">5</button>
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="6">6</button>
-                
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="7">7</button>
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="8">8</button>
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="9">9</button>
-                
-                <button id="btn-login-clear" data-action="clear" class="numpad-btn bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 text-xl font-bold py-4 rounded-2xl shadow-sm transition-all">清除</button>
-                <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all" data-val="0">0</button>
-                <button id="btn-login-submit" data-action="submit" class="numpad-btn bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-all">登入</button>
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="1">1</button>
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="2">2</button>
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="3">3</button>
+
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="4">4</button>
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="5">5</button>
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="6">6</button>
+
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="7">7</button>
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="8">8</button>
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="9">9</button>
+
+                <button id="btn-login-clear" data-action="clear"
+                    class="numpad-btn bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 text-xl font-bold py-4 rounded-2xl shadow-sm transition-all">清除</button>
+                <button
+                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
+                    data-val="0">0</button>
+                <button id="btn-login-submit" data-action="submit"
+                    class="numpad-btn bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-all">登入</button>
             </div>
         </div>
     </div>
 
     <!-- 🚨 修復完成的未爆彈：總部特權彈窗 -->
-    <div id="super-admin-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <div id="super-admin-card" class="bg-white p-6 rounded-2xl shadow-2xl w-[90%] max-w-[400px] transform scale-95 transition-transform duration-300">
+    <div id="super-admin-modal"
+        class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div id="super-admin-card"
+            class="bg-white p-6 rounded-2xl shadow-2xl w-[90%] max-w-[400px] transform scale-95 transition-transform duration-300">
             <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">👑 總部特權登入</h3>
             <label class="block text-sm font-bold text-gray-600 mb-2">請選擇模擬操作門市：</label>
-            <select id="super-store-select" class="w-full border-2 border-blue-200 rounded-xl p-3 mb-6 bg-blue-50 text-blue-800 font-bold focus:outline-none focus:border-blue-500"></select>
+            <select id="super-store-select"
+                class="w-full border-2 border-blue-200 rounded-xl p-3 mb-6 bg-blue-50 text-blue-800 font-bold focus:outline-none focus:border-blue-500"></select>
             <div class="flex gap-3">
-                <button onclick="document.getElementById('super-admin-modal').classList.add('hidden')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-all">取消</button>
-                <button id="btn-super-enter" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition-all">進入系統</button>
+                <button onclick="document.getElementById('super-admin-modal').classList.add('hidden')"
+                    class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-all">取消</button>
+                <button id="btn-super-enter"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition-all">進入系統</button>
             </div>
         </div>
     </div>
 
-   <!-- 🚨 架構優化：頂部狀態列 (導入 env(safe-area) 防禦瀏海遮擋) -->
-    <header class="bg-slate-800 text-white min-h-[60px] pt-[max(env(safe-area-inset-top),12px)] pb-3 px-4 md:px-6 flex justify-between items-center shadow-md shrink-0 z-20 relative">
+    <!-- 🚨 架構優化：頂部狀態列 (導入 env(safe-area) 防禦瀏海遮擋) -->
+    <header
+        class="bg-slate-800 text-white min-h-[60px] pt-[max(env(safe-area-inset-top),12px)] pb-3 px-4 md:px-6 flex justify-between items-center shadow-md shrink-0 z-20 relative">
         <div class="text-lg md:text-xl font-bold tracking-wider truncate flex items-center">
             🏷️ 標籤系統
         </div>
         <div class="flex items-center gap-2 md:gap-4 mt-1 md:mt-0">
-            <div id="network-status" class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-700 text-xs">
+            <div id="network-status"
+                class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-700 text-xs">
                 <span class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></span>
                 <span>網路連線</span>
             </div>
-            <button id="sync-btn" class="bg-blue-600 hover:bg-blue-500 text-white p-2 md:px-4 md:py-2 rounded-lg font-bold shadow-lg transition-all text-sm">
+            <button id="sync-btn"
+                class="bg-blue-600 hover:bg-blue-500 text-white p-2 md:px-4 md:py-2 rounded-lg font-bold shadow-lg transition-all text-sm">
                 🔄 <span class="hidden md:inline">同步</span>
             </button>
-            <button id="btn-open-settings" class="bg-slate-700 hover:bg-slate-600 p-2 md:px-4 md:py-2 rounded-lg transition-all text-sm" title="系統設定">
+            <button id="btn-open-settings"
+                class="bg-slate-700 hover:bg-slate-600 p-2 md:px-4 md:py-2 rounded-lg transition-all text-sm"
+                title="系統設定">
                 ⚙️
             </button>
-            <button id="btn-logout" class="bg-red-900/80 hover:bg-red-800 text-red-100 p-2 md:px-4 md:py-2 rounded-lg transition-all text-sm border border-red-800" title="登出">
+            <button id="btn-logout"
+                class="bg-red-900/80 hover:bg-red-800 text-red-100 p-2 md:px-4 md:py-2 rounded-lg transition-all text-sm border border-red-800"
+                title="登出">
                 🚪
             </button>
         </div>
@@ -122,15 +210,17 @@
 
     <!-- 🚨 架構優化：主視覺區 (導入 landscape: 橫向模式專屬佈局與 min-h-0 滾動修復) -->
     <main class="flex-1 flex flex-col landscape:flex-row lg:flex-row overflow-hidden bg-gray-50 relative min-h-0">
-        
+
         <!-- 🚨 分類導覽列 (直向：頂部橫向滑動 / 橫向與大螢幕：左側直向固定) -->
-        <aside class="w-full landscape:w-28 lg:w-48 bg-slate-800 text-white flex-shrink-0 z-10 flex flex-col shadow-md lg:shadow-2xl">
+        <aside
+            class="w-full landscape:w-28 lg:w-48 bg-slate-800 text-white flex-shrink-0 z-10 flex flex-col shadow-md lg:shadow-2xl">
             <!-- 橫向模式也會顯示標題 -->
             <div class="hidden landscape:block lg:block p-3 lg:p-4 text-center border-b border-slate-700 shrink-0">
                 <span class="font-bold tracking-widest text-slate-300 text-sm lg:text-base">商品分類</span>
             </div>
             <!-- ul 加上橫向與直向的動態切換 -->
-            <ul id="category-menu" class="flex flex-row landscape:flex-col lg:flex-col overflow-x-auto landscape:overflow-y-auto lg:overflow-y-auto w-full hide-scrollbar snap-x">
+            <ul id="category-menu"
+                class="flex flex-row landscape:flex-col lg:flex-col overflow-x-auto landscape:overflow-y-auto lg:overflow-y-auto w-full hide-scrollbar snap-x">
                 <!-- JS 注入分類 -->
             </ul>
         </aside>
@@ -138,35 +228,43 @@
         <!-- 中央：商品網格與搜尋 -->
         <!-- 🚨 核心修復：加入 min-h-0，強迫 flex 子元素遵守父容器高度，徹底修復商品無法上下滑動的問題 -->
         <section class="flex-1 flex flex-col relative bg-gray-100 min-w-0 min-h-0">
-            <div class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0 shadow-sm z-10">
-                <h2 id="current-category-title" class="text-xl md:text-2xl font-black text-gray-700 tracking-wider truncate">全部商品</h2>
+            <div
+                class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0 shadow-sm z-10">
+                <h2 id="current-category-title"
+                    class="text-xl md:text-2xl font-black text-gray-700 tracking-wider truncate">全部商品</h2>
                 <div class="relative flex-shrink-0 ml-4">
-                    <input type="text" id="item-search-input" class="pl-10 pr-4 py-2 w-40 md:w-64 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none font-bold text-gray-700 bg-gray-50" placeholder="搜尋...">
+                    <input type="text" id="item-search-input"
+                        class="pl-10 pr-4 py-2 w-40 md:w-64 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none font-bold text-gray-700 bg-gray-50"
+                        placeholder="搜尋...">
                     <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
                 </div>
             </div>
 
-            <div id="item-grid-container" class="flex-1 overflow-y-auto p-4 md:p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5 content-start">
+            <div id="item-grid-container"
+                class="flex-1 overflow-y-auto p-4 md:p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5 content-start">
                 <div class="col-span-full text-center text-gray-400 text-xl font-bold mt-10">等待載入資料庫...</div>
             </div>
         </section>
 
         <!-- 遮罩層 -->
-        <div id="drawer-backdrop" class="fixed inset-0 bg-slate-900/60 z-30 hidden lg:hidden backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+        <div id="drawer-backdrop"
+            class="fixed inset-0 bg-slate-900/60 z-30 hidden lg:hidden backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        </div>
 
-        <!-- 🚨 右側列印抽屜 (導入橫向寬版與內部雙欄排版) -->
+        <!-- 🚨 右側列印抽屜 (導入 lg: 覆蓋機制，防禦電腦螢幕誤判為手機橫向) -->
         <aside id="print-drawer" class="fixed inset-y-0 right-0 z-40 w-[85%] max-w-[340px] landscape:max-w-[700px] landscape:w-[90vw] lg:max-w-[400px] lg:w-[400px] bg-white border-l border-gray-200 shadow-2xl lg:shadow-none flex flex-col transform translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 h-[100dvh]">
             
+            <!-- 抽屜頂部 Header (僅手機版顯示) -->
             <div class="lg:hidden flex justify-between items-center px-4 pb-3 pt-[max(env(safe-area-inset-top),16px)] border-b border-gray-200 bg-slate-50 shrink-0">
                 <h3 class="text-lg font-bold text-slate-800">🏷️ 標籤設定</h3>
                 <button id="btn-close-drawer" class="w-10 h-10 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center font-black text-xl active:bg-slate-400 transition-colors">✕</button>
             </div>
 
-            <!-- 🚨 內部版面重構：直向為單欄垂直，橫向自動切換為雙欄 (左預覽、右設定) -->
-            <div class="flex-1 flex flex-col landscape:flex-row min-h-0 overflow-hidden">
+            <!-- 🚨 核心版面控制：手機直向(col) -> 手機橫向(row) -> 電腦螢幕(強制作為 col) -->
+            <div class="flex-1 flex flex-col landscape:flex-row lg:flex-col min-h-0 overflow-hidden">
                 
-                <!-- 區塊 A：左側預覽區 (橫向時靠左，直向時在上) -->
-                <div class="flex-1 overflow-y-auto flex flex-col relative min-h-0 landscape:border-r border-gray-200 bg-slate-50/50">
+                <!-- 區塊 A：左側預覽區 (電腦版時會在上方) -->
+                <div class="flex-1 overflow-y-auto flex flex-col relative min-h-0 landscape:border-r lg:border-r-0 border-gray-200 bg-slate-50/50">
                     <div id="preview-empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-10 transition-opacity">
                         <span class="text-5xl mb-4">👈</span>
                         <p class="text-xl font-bold text-gray-400">請選擇商品</p>
@@ -205,47 +303,47 @@
                         </div>
                     </div>
                 </div>
-<!-- ... (前面的抽屜與預覽區塊不變) ... -->
 
-<!-- 區塊 B：右側控制區 (橫向時固定於右側 320px 寬度，直向時在下方) -->
-<!-- 🚨 架構修復：改為 flex-1 填滿剩餘高度，確保內部元素能正確佈局 -->
-<div class="w-full landscape:w-[320px] flex-1 flex flex-col shrink-0 bg-white">
-    
-    <!-- 上方設定區塊群組，使用 overflow-y-auto 允許設定項目過多時可滾動 -->
-    <div class="flex-1 overflow-y-auto min-h-0">
-        <div class="p-4 border-b border-gray-100 shrink-0">
-            <label class="block text-gray-500 text-xs font-bold mb-1">🧑‍🍳 當班員工</label>
-            <input type="text" id="employee-name" placeholder="請輸入姓名..." class="w-full text-xl font-black border-2 border-gray-300 rounded-xl p-2 focus:border-blue-500 focus:outline-none text-center bg-white shadow-inner">
-        </div>
+                <!-- 區塊 B：右側控制區 (電腦版時會在下方) -->
+                <!-- 🚨 加入 lg:w-full 與 lg:flex-1，讓電腦版恢復垂直佔滿 -->
+                <div class="w-full landscape:w-[320px] lg:w-full flex-1 landscape:flex-none lg:flex-1 flex flex-col shrink-0 bg-white border-t border-gray-100">
+                    
+                    <!-- 設定選項區 (內容過多時可獨立滑動，不影響底部按鈕) -->
+                    <div class="flex-1 overflow-y-auto min-h-0">
+                        <div class="p-4 border-b border-gray-100 shrink-0">
+                            <label class="block text-gray-500 text-xs font-bold mb-1">🧑‍🍳 當班員工</label>
+                            <input type="text" id="employee-name" placeholder="請輸入姓名..." class="w-full text-xl font-black border-2 border-gray-300 rounded-xl p-2 focus:border-blue-500 focus:outline-none text-center bg-white shadow-inner">
+                        </div>
 
-        <div class="p-4 shrink-0">
-            <label class="text-xs font-bold text-gray-500 mb-1 block">🏷️ 用途設定</label>
-            <select id="preview-category-select" class="w-full text-lg font-bold text-blue-700 border-2 border-blue-200 rounded-xl p-2 bg-blue-50 cursor-pointer"></select>
-        </div>
-    </div>
+                        <div class="p-4 shrink-0">
+                            <label class="text-xs font-bold text-gray-500 mb-1 block">🏷️ 用途設定</label>
+                            <select id="preview-category-select" class="w-full text-lg font-bold text-blue-700 border-2 border-blue-200 rounded-xl p-2 bg-blue-50 cursor-pointer"></select>
+                        </div>
+                    </div>
 
-    <!-- 🚨 架構修復：底部列印操作區，使用 mt-auto 強制置底，並加大 pb 數值防禦 Home Indicator -->
-    <div class="mt-auto shrink-0 w-full border-t border-gray-200 px-4 pt-3 pb-8 md:pb-[max(env(safe-area-inset-bottom),24px)] flex flex-col gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 bg-white">
-        <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100">
-            <span class="text-lg font-bold text-gray-700 ml-2">張數</span>
-            <div class="flex items-center gap-2">
-                <button id="btn-qty-minus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">-</button>
-                <input type="number" id="print-quantity" class="w-14 h-12 text-center text-2xl font-black text-gray-800 border-2 border-slate-200 rounded-xl bg-white" value="1" min="1" max="99">
-                <button id="btn-qty-plus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">+</button>
-            </div>
-        </div>
+                    <!-- 🚨 底部列印操作區 (使用 shrink-0 與 mt-auto 強制釘在最底部，絕對不被覆蓋) -->
+                    <div class="shrink-0 w-full border-t border-gray-200 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),24px)] lg:pb-6 flex flex-col gap-3 bg-white mt-auto z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
+                        <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100">
+                            <span class="text-lg font-bold text-gray-700 ml-2">張數</span>
+                            <div class="flex items-center gap-2">
+                                <button id="btn-qty-minus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">-</button>
+                                <input type="number" id="print-quantity" class="w-14 h-12 text-center text-2xl font-black text-gray-800 border-2 border-slate-200 rounded-xl bg-white" value="1" min="1" max="99">
+                                <button id="btn-qty-plus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">+</button>
+                            </div>
+                        </div>
 
-        <!-- 按鈕本身也確保不會被擠壓 -->
-        <button id="btn-print" class="w-full shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl h-14 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-            🖨️ 列印標籤
-        </button>
-    </div>
-</div>
+                        <button id="btn-print" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl h-14 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                            🖨️ 列印標籤
+                        </button>
+                    </div>
+                </div>
             </div>
         </aside>
     </main>
 
     <script type="module" src="./src/app.js"></script>
-    <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-3 pointer-events-none"></div>
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-3 pointer-events-none">
+    </div>
 </body>
+
 </html>
