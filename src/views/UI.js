@@ -178,11 +178,17 @@ export class UIManager {
     updateActiveCategoryUI(selectedCategory) {
         this.currentCategoryTitle.innerText = selectedCategory;
         const allLis = this.categoryMenu.querySelectorAll('li');
+        
+        // 🚨 核心優化：將 baseClasses 獨立出來，確保與 createCategoryElement 保持絕對一致
+        const baseClasses = "flex-shrink-0 px-3 py-2 md:px-5 md:py-4 text-base md:text-lg font-bold text-center border-b-4 lg:border-b border-transparent cursor-pointer transition-colors snap-center whitespace-nowrap flex items-center justify-center";
+
         allLis.forEach(li => {
             if (li.dataset.category === selectedCategory) {
-                li.className = "p-5 text-xl font-bold text-center border-b border-slate-700 cursor-pointer transition-colors active:bg-slate-600 bg-blue-600 text-white";
+                // 啟動狀態
+                li.className = `${baseClasses} text-white border-b-blue-400 lg:border-b-slate-700 bg-blue-600`;
             } else {
-                li.className = "p-5 text-xl font-bold text-center border-b border-slate-700 cursor-pointer transition-colors active:bg-slate-600 hover:bg-slate-700 text-slate-300";
+                // 閒置狀態
+                li.className = `${baseClasses} text-slate-300 hover:text-white hover:bg-slate-700 lg:border-b-slate-700`;
             }
         });
     }
