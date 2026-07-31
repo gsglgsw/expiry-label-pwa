@@ -212,7 +212,7 @@ class PrintService {
      * 📡 [網路通訊層] 
      */
     async sendPrintJob(middlewareIp, printerIp, command) {
-        const apiUrl = `http://${middlewareIp}:3000/api/print`;
+        const apiUrl = `https://${middlewareIp}:3000/api/print`;
         try {
             const response = await fetch(apiUrl, {
                 method: 'POST',
