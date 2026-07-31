@@ -11,7 +11,6 @@ export class UIManager {
         this.previewEmptyState = document.getElementById('preview-empty-state');
         this.previewActiveState = document.getElementById('preview-active-state');
         
-        // 🚨 新增：抽屜與遮罩層 DOM 綁定
         this.printDrawer = document.getElementById('print-drawer');
         this.drawerBackdrop = document.getElementById('drawer-backdrop');
         this.btnCloseDrawer = document.getElementById('btn-close-drawer');
@@ -48,7 +47,6 @@ export class UIManager {
             this.previewEmpName.innerText = e.target.value || '';
         });
 
-        // 🚨 綁定雙重防呆關閉機制
         if (this.drawerBackdrop && this.btnCloseDrawer) {
             this.drawerBackdrop.addEventListener('click', () => this.toggleDrawer(false));
             this.btnCloseDrawer.addEventListener('click', () => this.toggleDrawer(false));
@@ -103,24 +101,26 @@ export class UIManager {
         });
     }
 
-    // 🚨 新增：處理抽屜面板的開關狀態與動畫
     toggleDrawer(isShow) {
         if (!this.printDrawer || !this.drawerBackdrop) return;
         
         if (isShow) {
             this.drawerBackdrop.classList.remove('hidden');
-            // 強制瀏覽器重繪 (Reflow)，確保 CSS Transition 能正常觸發
-            void this.drawerBackdrop.offsetWidth;
+            void this.drawerBackdrop.offsetWidth; 
             this.drawerBackdrop.classList.remove('opacity-0');
             this.printDrawer.classList.remove('translate-x-full');
         } else {
             this.printDrawer.classList.add('translate-x-full');
             this.drawerBackdrop.classList.add('opacity-0');
-            // 等待動畫結束後，將遮罩徹底隱藏避免阻擋點擊
             setTimeout(() => {
                 this.drawerBackdrop.classList.add('hidden');
             }, 300);
         }
+    }
+
+    // 🚨 宣告共用 CSS 樣式常數，遵循 DRY 原則
+    getCategoryBaseClasses() {
+        return "flex-shrink-0 px-3 py-2 md:px-5 md:py-4 text-base md:text-lg font-bold text-center border-b-4 lg:border-b border-transparent cursor-pointer transition-colors snap-center whitespace-nowrap flex items-center justify-center";
     }
 
     renderCategoryMenu(categories, onSelectCallback) {
@@ -138,9 +138,7 @@ export class UIManager {
 
     createCategoryElement(name, isActive) {
         const li = document.createElement('li');
-        
-        // 🚨 核心優化：縮小手機版 padding (px-3 py-2) 與字體 (text-base)，並加入 whitespace-nowrap 強制橫向顯示
-        const baseClasses = "flex-shrink-0 px-3 py-2 md:px-5 md:py-4 text-base md:text-lg font-bold text-center border-b-4 lg:border-b border-transparent cursor-pointer transition-colors snap-center whitespace-nowrap flex items-center justify-center";
+        const baseClasses = this.getCategoryBaseClasses();
         
         li.className = isActive 
             ? `${baseClasses} text-white border-b-blue-400 lg:border-b-slate-700 bg-blue-600` 
@@ -161,10 +159,8 @@ export class UIManager {
 
         items.forEach(item => {
             const card = document.createElement('div');
-            // 🚨 核心優化：改為清單按鍵設計，設定最小高度，移除原本強制的 aspect-square
             card.className = "bg-white px-2 py-4 md:px-4 md:py-5 rounded-2xl shadow-sm border-2 border-slate-200 hover:border-blue-500 cursor-pointer transition-all active:scale-95 flex items-center justify-center min-h-[80px] md:min-h-[100px]";
             
-            // 🚨 核心優化：只留下商品名稱。加入 break-words 與 leading-tight 確保長文字自動換行且不會吃字
             card.innerHTML = `
                 <div class="text-lg md:text-xl font-black text-gray-800 leading-snug break-words text-center w-full">
                     ${item.labelName}
@@ -175,19 +171,16 @@ export class UIManager {
         });
     }
 
+    // 🚨 徹底修復狀態更新時樣式被洗掉的 Bug
     updateActiveCategoryUI(selectedCategory) {
         this.currentCategoryTitle.innerText = selectedCategory;
         const allLis = this.categoryMenu.querySelectorAll('li');
-        
-        // 🚨 核心優化：將 baseClasses 獨立出來，確保與 createCategoryElement 保持絕對一致
-        const baseClasses = "flex-shrink-0 px-3 py-2 md:px-5 md:py-4 text-base md:text-lg font-bold text-center border-b-4 lg:border-b border-transparent cursor-pointer transition-colors snap-center whitespace-nowrap flex items-center justify-center";
+        const baseClasses = this.getCategoryBaseClasses();
 
         allLis.forEach(li => {
             if (li.dataset.category === selectedCategory) {
-                // 啟動狀態
                 li.className = `${baseClasses} text-white border-b-blue-400 lg:border-b-slate-700 bg-blue-600`;
             } else {
-                // 閒置狀態
                 li.className = `${baseClasses} text-slate-300 hover:text-white hover:bg-slate-700 lg:border-b-slate-700`;
             }
         });
@@ -203,15 +196,12 @@ export class UIManager {
         this.categorySelect.innerHTML = '';
         this.qtyInput.value = 1;
         
-        // 🚨 核心邏輯：當選擇商品後，自動彈出列印抽屜 (僅在小螢幕作用，大螢幕會因 Tailwind 覆蓋而無視)
         this.toggleDrawer(true);
     }
 
     resetToEmptyState() {
         this.previewActiveState.classList.add('opacity-0', 'pointer-events-none');
         this.previewEmptyState.classList.remove('opacity-0', 'pointer-events-none');
-        
-        // 🚨 核心邏輯：當取消選擇時，自動收合抽屜
         this.toggleDrawer(false);
     }
 
