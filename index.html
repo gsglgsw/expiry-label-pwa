@@ -251,8 +251,8 @@
             class="fixed inset-0 bg-slate-900/60 z-30 hidden lg:hidden backdrop-blur-sm transition-opacity duration-300 opacity-0">
         </div>
 
-        <!-- 🚨 右側列印抽屜 (導入 lg: 覆蓋機制，防禦電腦螢幕誤判為手機橫向) -->
-        <aside id="print-drawer" class="fixed inset-y-0 right-0 z-40 w-[85%] max-w-[340px] landscape:max-w-[700px] landscape:w-[90vw] lg:max-w-[400px] lg:w-[400px] bg-white border-l border-gray-200 shadow-2xl lg:shadow-none flex flex-col transform translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 h-[100dvh]">
+        <!-- 🚨 右側列印抽屜 (導入 max-lg:landscape: 隔離電腦版，並分離絕對置底按鈕) -->
+        <aside id="print-drawer" class="fixed inset-y-0 right-0 z-40 w-[85%] max-w-[340px] max-lg:landscape:max-w-[700px] max-lg:landscape:w-[90vw] lg:max-w-[400px] lg:w-[400px] bg-white border-l border-gray-200 shadow-2xl lg:shadow-none flex flex-col transform translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 h-[100dvh]">
             
             <!-- 抽屜頂部 Header (僅手機版顯示) -->
             <div class="lg:hidden flex justify-between items-center px-4 pb-3 pt-[max(env(safe-area-inset-top),16px)] border-b border-gray-200 bg-slate-50 shrink-0">
@@ -260,17 +260,17 @@
                 <button id="btn-close-drawer" class="w-10 h-10 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center font-black text-xl active:bg-slate-400 transition-colors">✕</button>
             </div>
 
-            <!-- 🚨 核心版面控制：手機直向(col) -> 手機橫向(row) -> 電腦螢幕(強制作為 col) -->
-            <div class="flex-1 flex flex-col landscape:flex-row lg:flex-col min-h-0 overflow-hidden">
+            <!-- 🚨 滾動內容區 (預覽卡片 + 設定表單)：若空間不足，這區會自動出現捲軸，絕不影響底部按鈕 -->
+            <div class="flex-1 flex flex-col max-lg:landscape:flex-row min-h-0 overflow-y-auto overflow-x-hidden bg-white">
                 
-                <!-- 區塊 A：左側預覽區 (電腦版時會在上方) -->
-                <div class="flex-1 overflow-y-auto flex flex-col relative min-h-0 landscape:border-r lg:border-r-0 border-gray-200 bg-slate-50/50">
+                <!-- 區塊 A：左側預覽區 (手機橫向時靠左，直向/電腦版時在上方) -->
+                <div class="flex-1 flex flex-col relative min-h-[320px] max-lg:landscape:min-h-0 max-lg:landscape:border-r border-gray-200 bg-slate-50/50 p-4 justify-center items-center">
                     <div id="preview-empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-10 transition-opacity">
                         <span class="text-5xl mb-4">👈</span>
                         <p class="text-xl font-bold text-gray-400">請選擇商品</p>
                     </div>
 
-                    <div id="preview-active-state" class="opacity-0 pointer-events-none transition-opacity duration-300 flex-1 flex flex-col p-4 justify-center items-center">
+                    <div id="preview-active-state" class="opacity-0 pointer-events-none transition-opacity duration-300 flex-1 flex flex-col justify-center items-center w-full">
                         <div class="w-full flex justify-center transform scale-[0.85] sm:scale-[0.9] lg:scale-100 origin-center">
                             <div class="border-2 border-slate-700 rounded-xl p-5 bg-white shadow-sm flex flex-col shrink-0" style="width: 350px; height: 280px;">
                                 <div class="text-sm text-gray-600 font-bold mb-2">
@@ -304,39 +304,34 @@
                     </div>
                 </div>
 
-                <!-- 區塊 B：右側控制區 (電腦版時會在下方) -->
-                <!-- 🚨 加入 lg:w-full 與 lg:flex-1，讓電腦版恢復垂直佔滿 -->
-                <div class="w-full landscape:w-[320px] lg:w-full flex-1 landscape:flex-none lg:flex-1 flex flex-col shrink-0 bg-white border-t border-gray-100">
-                    
-                    <!-- 設定選項區 (內容過多時可獨立滑動，不影響底部按鈕) -->
-                    <div class="flex-1 overflow-y-auto min-h-0">
-                        <div class="p-4 border-b border-gray-100 shrink-0">
-                            <label class="block text-gray-500 text-xs font-bold mb-1">🧑‍🍳 當班員工</label>
-                            <input type="text" id="employee-name" placeholder="請輸入姓名..." class="w-full text-xl font-black border-2 border-gray-300 rounded-xl p-2 focus:border-blue-500 focus:outline-none text-center bg-white shadow-inner">
-                        </div>
-
-                        <div class="p-4 shrink-0">
-                            <label class="text-xs font-bold text-gray-500 mb-1 block">🏷️ 用途設定</label>
-                            <select id="preview-category-select" class="w-full text-lg font-bold text-blue-700 border-2 border-blue-200 rounded-xl p-2 bg-blue-50 cursor-pointer"></select>
-                        </div>
+                <!-- 區塊 B：右側設定區 (手機橫向時靠右，直向/電腦版時在下方) -->
+                <div class="w-full max-lg:landscape:w-[320px] flex-none flex flex-col bg-white">
+                    <div class="p-4 border-b border-t max-lg:landscape:border-t-0 border-gray-100">
+                        <label class="block text-gray-500 text-xs font-bold mb-1">🧑‍🍳 當班員工</label>
+                        <input type="text" id="employee-name" placeholder="請輸入姓名..." class="w-full text-xl font-black border-2 border-gray-300 rounded-xl p-2 focus:border-blue-500 focus:outline-none text-center bg-white shadow-inner">
                     </div>
 
-                    <!-- 🚨 底部列印操作區 (使用 shrink-0 與 mt-auto 強制釘在最底部，絕對不被覆蓋) -->
-                    <div class="shrink-0 w-full border-t border-gray-200 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),24px)] lg:pb-6 flex flex-col gap-3 bg-white mt-auto z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
-                        <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100">
-                            <span class="text-lg font-bold text-gray-700 ml-2">張數</span>
-                            <div class="flex items-center gap-2">
-                                <button id="btn-qty-minus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">-</button>
-                                <input type="number" id="print-quantity" class="w-14 h-12 text-center text-2xl font-black text-gray-800 border-2 border-slate-200 rounded-xl bg-white" value="1" min="1" max="99">
-                                <button id="btn-qty-plus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">+</button>
-                            </div>
-                        </div>
-
-                        <button id="btn-print" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl h-14 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-                            🖨️ 列印標籤
-                        </button>
+                    <div class="p-4">
+                        <label class="text-xs font-bold text-gray-500 mb-1 block">🏷️ 用途設定</label>
+                        <select id="preview-category-select" class="w-full text-lg font-bold text-blue-700 border-2 border-blue-200 rounded-xl p-2 bg-blue-50 cursor-pointer"></select>
                     </div>
                 </div>
+            </div>
+
+            <!-- 🚨 絕對置底：列印操作區 (使用 shrink-0 保證它絕對不會被擠壓) -->
+            <div class="shrink-0 w-full border-t border-gray-200 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),16px)] lg:pb-6 flex flex-col gap-3 bg-white z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
+                <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    <span class="text-lg font-bold text-gray-700 ml-2">張數</span>
+                    <div class="flex items-center gap-2">
+                        <button id="btn-qty-minus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">-</button>
+                        <input type="number" id="print-quantity" class="w-14 h-12 text-center text-2xl font-black text-gray-800 border-2 border-slate-200 rounded-xl bg-white" value="1" min="1" max="99">
+                        <button id="btn-qty-plus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">+</button>
+                    </div>
+                </div>
+
+                <button id="btn-print" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl h-14 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                    🖨️ 列印標籤
+                </button>
             </div>
         </aside>
     </main>
