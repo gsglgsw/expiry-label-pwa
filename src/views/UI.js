@@ -138,8 +138,9 @@ export class UIManager {
 
     createCategoryElement(name, isActive) {
         const li = document.createElement('li');
-        // 🚨 核心優化：手機端顯示為橫向 Pill 樣式，桌面端顯示為整列 Block 樣式
-        const baseClasses = "flex-shrink-0 px-5 py-3 lg:py-5 text-lg font-bold text-center border-b-4 lg:border-b border-transparent cursor-pointer transition-colors snap-center whitespace-nowrap";
+        
+        // 🚨 核心優化：縮小手機版 padding (px-3 py-2) 與字體 (text-base)，並加入 whitespace-nowrap 強制橫向顯示
+        const baseClasses = "flex-shrink-0 px-3 py-2 md:px-5 md:py-4 text-base md:text-lg font-bold text-center border-b-4 lg:border-b border-transparent cursor-pointer transition-colors snap-center whitespace-nowrap flex items-center justify-center";
         
         li.className = isActive 
             ? `${baseClasses} text-white border-b-blue-400 lg:border-b-slate-700 bg-blue-600` 
