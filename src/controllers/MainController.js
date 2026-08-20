@@ -67,6 +67,35 @@ export class MainController {
         // 🚨 架構師修正：已拔除 customCategoryInput 相關的監聽器綁定
         
         this.ui.btnPrint.addEventListener('click', this.handlePrintAction);
+    // 🚨 更新：自訂標籤文字的即時雙向綁定 (加入防禦性長度計算)
+        const customInput = document.getElementById('custom-label-input');
+        const customPreview = document.getElementById('preview-custom-text');
+        
+        if (customInput && customPreview) {
+            customInput.addEventListener('input', (event) => {
+                const val = event.target.value.trim();
+                
+                // 🛡️ 架構師防呆：使用 Regex 剔除所有換行符號 (\n) 後，再來計算「純文字長度」
+                const visibleLength = val.replace(/\n/g, '').length;
+
+                if (val === '') {
+                    customPreview.className = "text-3xl font-black text-gray-400 text-center whitespace-pre-wrap break-all leading-snug w-full";
+                    customPreview.innerText = '請在右側輸入\n自訂標籤內容';
+                } else if (visibleLength <= 8) {
+                    // 1~8 個可視字元 (就算中間夾了 \n，只要字數不超過8，一樣維持最大字體)
+                    customPreview.className = "text-[3.5rem] font-black text-gray-800 text-center whitespace-pre-wrap break-all leading-tight w-full tracking-wide";
+                    customPreview.innerText = val;
+                } else if (visibleLength <= 16) {
+                    // 9~16 個可視字元
+                    customPreview.className = "text-4xl font-black text-gray-800 text-center whitespace-pre-wrap break-all leading-snug w-full tracking-wide";
+                    customPreview.innerText = val;
+                } else {
+                    // 17 個字以上
+                    customPreview.className = "text-2xl font-black text-gray-800 text-center whitespace-pre-wrap break-all leading-snug w-full";
+                    customPreview.innerText = val;
+                }
+            });
+        }
     }
     
     handleSearch(event) {
@@ -167,25 +196,62 @@ export class MainController {
         this.ui.renderItemGrid(filteredItems, this.handleItemSelect);
     }
 
-    handleItemSelect(item) {
+   handleItemSelect(item) {
         if (!(this instanceof MainController)) {
             console.error('❌ [嚴重架構錯誤] this 作用域遺失！目前的 this 已經不是 MainController。');
         }
 
         this.selectedItem = item;
-        
         this.ui.showPrintPanel(item);
         this.ui.categorySelect.innerHTML = ''; 
         
-        if (item && item.category1) {
-            this.ui.categorySelect.add(new Option(`${item.category1} (${item.expireHours1 || 0}H)`, 'cat1'));
-        }
-        if (item && item.category2) {
-            this.ui.categorySelect.add(new Option(`${item.category2} (${item.expireHours2 || 0}H)`, 'cat2'));
-        }
-        // 🚨 架構師修正：將「自訂用途」更名為「手寫標籤」
-        this.ui.categorySelect.add(new Option('手寫標籤', 'custom'));
+        // 🚨 判斷是否為自訂/空白標籤
+        const isCustomLabel = (item.internalId === 'SYS-BLANK' || item.internalId === 'SYS-CUSTOM');
         
+        // 抓取所有需要的 DOM 元素
+        const customContainer = document.getElementById('custom-label-container');
+        const categoryContainer = document.getElementById('category-select-container');
+        const normalLayout = document.getElementById('preview-normal-layout');
+        const customLayout = document.getElementById('preview-custom-layout');
+        const customInput = document.getElementById('custom-label-input');
+        const customPreview = document.getElementById('preview-custom-text');
+        const empContainer = document.getElementById('employee-input-container'); 
+
+        if (isCustomLabel) {
+            // 切換為自訂模式 UI 與圖層
+            if (customContainer) customContainer.classList.remove('hidden');
+            if (categoryContainer) categoryContainer.classList.add('hidden');
+            if (normalLayout) normalLayout.classList.add('hidden');
+            if (customLayout) customLayout.classList.remove('hidden');
+            
+            // 隱藏員工輸入框
+            if (empContainer) empContainer.classList.add('hidden');
+            
+            // 重置自訂標籤的預設文字與樣式
+            if (customInput) customInput.value = '';
+            if (customPreview) {
+                customPreview.className = "text-3xl font-black text-gray-400 text-center whitespace-pre-wrap break-all leading-snug w-full";
+                customPreview.innerText = '請在右側輸入\n自訂標籤內容';
+            }
+        } else {
+            // 恢復為一般效期模式 UI 與圖層
+            if (customContainer) customContainer.classList.add('hidden');
+            if (categoryContainer) categoryContainer.classList.remove('hidden');
+            if (normalLayout) normalLayout.classList.remove('hidden');
+            if (customLayout) customLayout.classList.add('hidden');
+            
+            // 顯示員工輸入框
+            if (empContainer) empContainer.classList.remove('hidden');
+            
+            // 🚨 恢復下拉選單：注入資料庫分類與手寫選項
+            if (item.category1) this.ui.categorySelect.add(new Option(`${item.category1} (${item.expireHours1 || 0}H)`, 'cat1'));
+            if (item.category2) this.ui.categorySelect.add(new Option(`${item.category2} (${item.expireHours2 || 0}H)`, 'cat2'));
+            
+            // 🔧 架構師修復：補回遺失的「手寫標籤」常駐選項
+            this.ui.categorySelect.add(new Option('手寫標籤', 'custom'));
+        }
+        
+        // 觸發重新計算，把資料填入畫面
         this.handleCategoryChange({ target: this.ui.categorySelect });
     }
 
@@ -220,6 +286,11 @@ export class MainController {
 
    recalculateEXD() {
         if (!this.selectedItem) return;
+        
+        // 🚨 攔截預覽：如果是自訂標籤，直接顯示提示字眼並退出計算
+        const isCustomLabel = (this.selectedItem.internalId === 'SYS-BLANK' || this.selectedItem.internalId === 'SYS-CUSTOM');
+        
+        if (isCustomLabel) return;
         
         let mfdStr = this.ui.previewMfdInput.value;
         const hourDisplay = document.getElementById('preview-mfd-hour-display');
@@ -282,8 +353,17 @@ export class MainController {
     }
 
     async handlePrintAction() {
-        if (!this.selectedItem || !this.currentPrintData) return;
+        if (!this.selectedItem) return;
         
+        const isCustomLabel = (this.selectedItem.internalId === 'SYS-BLANK' || this.selectedItem.internalId === 'SYS-CUSTOM');
+        const customInput = document.getElementById('custom-label-input');
+        
+        // 防呆：如果是自訂標籤，但店員沒打字就按列印，直接擋下
+        if (isCustomLabel && (!customInput.value || customInput.value.trim() === '')) {
+            this.ui.showToast('請輸入自訂標籤內容！', 'error');
+            return;
+        }
+
         const btn = this.ui.btnPrint;
         const originalText = btn.innerHTML;
         const qty = parseInt(this.ui.qtyInput.value, 10) || 1;
@@ -302,17 +382,19 @@ export class MainController {
             btn.innerHTML = `⏳ 傳輸中 (${lang})...`;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
 
-            // 🚨 架構師修正：取消 '未填寫' 的 fallback，讓它純粹空白
+            // 🚨 將 Flag 與文字封裝進 printData 傳給 PrintService
             const printData = {
                 empName: this.ui.employeeNameInput.value || '',
                 itemName: this.selectedItem.labelName,
+                isCustom: isCustomLabel,
+                customText: isCustomLabel ? customInput.value.trim() : '',
                 ...this.currentPrintData
             };
             
             const finalCommand = await printService.generateCommand(lang, printData, qty);
             await printService.sendPrintJob(targetIp, printerIp, finalCommand);
             
-            this.ui.showToast(`✅ ${lang} 列印指令已成功送達！`);
+            this.ui.showToast(`✅ 標籤已成功送出！`);
         } catch (error) {
             this.ui.showToast(`列印失敗: ${error.message}`, 'error');
         } finally {
@@ -322,7 +404,7 @@ export class MainController {
         }
         this.ui.toggleDrawer(false);
     }
-
+    
     extractUniqueCategories(items) {
         const catSet = new Set();
         items.forEach(item => {

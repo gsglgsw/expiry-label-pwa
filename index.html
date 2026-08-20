@@ -105,17 +105,16 @@
         <p id="global-loading-text" class="text-white text-xl font-bold tracking-widest">載入中...</p>
     </div>
 
-   <!-- 門市系統登入介面 (修復 Flexbox 置中裁切死鎖) -->
+    <!-- 門市系統登入介面 (修復 Flexbox 置中裁切死鎖) -->
     <!-- 🚨 第一層 (滾動層)：拔除 flex，專職負責滿版與產生捲軸 -->
-    <div id="login-view"
-        class="fixed inset-0 z-50 overflow-y-auto bg-gray-100 transition-opacity duration-500">
-        
+    <div id="login-view" class="fixed inset-0 z-50 overflow-y-auto bg-gray-100 transition-opacity duration-500">
+
         <!-- 🚨 第二層 (對齊層)：設定最小高度滿版 (min-h-full)，確保內容過長時只會往下延伸，絕不往上切斷 -->
         <div class="flex min-h-full items-center justify-center p-4 py-8">
-            
+
             <!-- 🚨 第三層 (內容層)：純粹的卡片容器 -->
             <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-[400px]">
-                
+
                 <h2 class="text-xl md:text-2xl font-black text-center text-gray-800 mb-6 tracking-wider">門市系統登入</h2>
 
                 <div id="pin-display"
@@ -128,21 +127,43 @@
 
                 <!-- 數字鍵盤 (統一按鈕高度為 py-3，在所有裝置上都能維持良好觸控熱區) -->
                 <div id="numpad-container" class="grid grid-cols-3 gap-2 md:gap-3">
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="1">1</button>
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="2">2</button>
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="3">3</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="1">1</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="2">2</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="3">3</button>
 
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="4">4</button>
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="5">5</button>
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="6">6</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="4">4</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="5">5</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="6">6</button>
 
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="7">7</button>
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="8">8</button>
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="9">9</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="7">7</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="8">8</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="9">9</button>
 
-                    <button id="btn-login-clear" data-action="clear" class="numpad-btn bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 text-lg md:text-xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all">清除</button>
-                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="0">0</button>
-                    <button id="btn-login-submit" data-action="submit" class="numpad-btn bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-lg md:text-xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-md transition-all">登入</button>
+                    <button id="btn-login-clear" data-action="clear"
+                        class="numpad-btn bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 text-lg md:text-xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all">清除</button>
+                    <button
+                        class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all"
+                        data-val="0">0</button>
+                    <button id="btn-login-submit" data-action="submit"
+                        class="numpad-btn bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-lg md:text-xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-md transition-all">登入</button>
                 </div>
             </div>
         </div>
@@ -239,84 +260,137 @@
         </div>
 
         <!-- 🚨 右側列印抽屜 (導入 max-lg:landscape: 隔離電腦版，並分離絕對置底按鈕) -->
-        <aside id="print-drawer" class="fixed inset-y-0 right-0 z-40 w-[85%] max-w-[340px] max-lg:landscape:max-w-[700px] max-lg:landscape:w-[90vw] lg:max-w-[400px] lg:w-[400px] bg-white border-l border-gray-200 shadow-2xl lg:shadow-none flex flex-col transform translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 h-[100dvh] lg:h-full">
-            
+        <aside id="print-drawer"
+            class="fixed inset-y-0 right-0 z-40 w-[85%] max-w-[340px] max-lg:landscape:max-w-[700px] max-lg:landscape:w-[90vw] lg:max-w-[400px] lg:w-[400px] bg-white border-l border-gray-200 shadow-2xl lg:shadow-none flex flex-col transform translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 h-[100dvh] lg:h-full">
+
             <!-- 抽屜頂部 Header (僅手機版顯示) -->
-            <div class="lg:hidden flex justify-between items-center px-4 pb-3 pt-[max(env(safe-area-inset-top),16px)] border-b border-gray-200 bg-slate-50 shrink-0">
+            <div
+                class="lg:hidden flex justify-between items-center px-4 pb-3 pt-[max(env(safe-area-inset-top),16px)] border-b border-gray-200 bg-slate-50 shrink-0">
                 <h3 class="text-lg font-bold text-slate-800">🏷️ 標籤設定</h3>
-                <button id="btn-close-drawer" class="w-10 h-10 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center font-black text-xl active:bg-slate-400 transition-colors">✕</button>
+                <button id="btn-close-drawer"
+                    class="w-10 h-10 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center font-black text-xl active:bg-slate-400 transition-colors">✕</button>
             </div>
 
             <!-- 🚨 滾動內容區 (預覽卡片 + 設定表單)：若空間不足，這區會自動出現捲軸，絕不影響底部按鈕 -->
-            <div class="flex-1 flex flex-col max-lg:landscape:flex-row min-h-0 overflow-y-auto overflow-x-hidden bg-white">
-                
+            <div
+                class="flex-1 flex flex-col max-lg:landscape:flex-row min-h-0 overflow-y-auto overflow-x-hidden bg-white">
+
                 <!-- 區塊 A：左側預覽區 (手機橫向時靠左，直向/電腦版時在上方) -->
-                <div class="flex-1 flex flex-col relative min-h-[320px] max-lg:landscape:min-h-0 max-lg:landscape:border-r border-gray-200 bg-slate-50/50 p-4 justify-center items-center">
-                    <div id="preview-empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-10 transition-opacity">
+                <div
+                    class="flex-1 flex flex-col relative min-h-[320px] max-lg:landscape:min-h-0 max-lg:landscape:border-r border-gray-200 bg-slate-50/50 p-4 justify-center items-center">
+                    <div id="preview-empty-state"
+                        class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-10 transition-opacity">
                         <span class="text-5xl mb-4">👈</span>
                         <p class="text-xl font-bold text-gray-400">請選擇商品</p>
                     </div>
 
-                    <div id="preview-active-state" class="opacity-0 pointer-events-none transition-opacity duration-300 flex-1 flex flex-col justify-center items-center w-full">
-                        <div class="w-full flex justify-center transform scale-[0.85] sm:scale-[0.9] lg:scale-100 origin-center">
-                            <div class="border-2 border-slate-700 rounded-xl p-5 bg-white shadow-sm flex flex-col shrink-0" style="width: 350px; height: 280px;">
-                                <div class="text-sm text-gray-600 font-bold mb-2">
-                                    員工：<span id="preview-emp-name"></span>
-                                </div>
+                    <div id="preview-active-state"
+                        class="opacity-0 pointer-events-none transition-opacity duration-300 flex-1 flex flex-col justify-center items-center w-full">
+                        <div
+                            class="w-full flex justify-center transform scale-[0.85] sm:scale-[0.9] lg:scale-100 origin-center">
+                            <div class="border-2 border-slate-700 rounded-xl p-5 bg-white shadow-sm flex flex-col shrink-0 relative overflow-hidden"
+                                style="width: 350px; height: 280px;">
 
-                                <div class="flex items-center text-sm font-bold text-gray-800 mb-4 justify-between">
-                                    <div id="mfd-date-trigger" class="cursor-pointer hover:text-blue-600 flex items-center bg-slate-50 px-2 py-1 rounded">
-                                        <span id="preview-mfd-display"></span>
-                                        <svg class="w-4 h-4 ml-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                        <input type="date" id="preview-mfd-input" class="opacity-0 absolute w-0 h-0 border-0">
+                                <!-- 🔵 圖層 1：一般效期標籤預覽層 (保留你剛才修好的垂直排版) -->
+                                <div id="preview-normal-layout"
+                                    class="w-full h-full flex flex-col transition-opacity duration-300">
+                                    <div class="text-sm text-gray-600 font-bold mb-2">
+                                        員工：<span id="preview-emp-name"></span>
                                     </div>
-
-                                    <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-1 border border-slate-200">
-                                        <button id="btn-mfd-hour-minus" class="w-8 h-8 rounded bg-white font-black text-slate-600 active:scale-95 transition-all">-</button>
-                                        <div class="w-10 text-center font-black text-lg text-blue-700" id="preview-mfd-hour-display" data-hour="0">00</div>
-                                        <button id="btn-mfd-hour-plus" class="w-8 h-8 rounded bg-white font-black text-slate-600 active:scale-95 transition-all">+</button>
+                                    <div class="flex items-center text-sm font-bold text-gray-800 mb-4 justify-between">
+                                        <div id="mfd-date-trigger"
+                                            class="cursor-pointer hover:text-blue-600 flex items-center bg-slate-50 px-2 py-1 rounded">
+                                            <span id="preview-mfd-display"></span>
+                                            <svg class="w-4 h-4 ml-1 text-blue-500" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                                </path>
+                                            </svg>
+                                            <input type="date" id="preview-mfd-input"
+                                                class="opacity-0 absolute w-0 h-0 border-0">
+                                        </div>
+                                        <div
+                                            class="flex items-center gap-1 bg-slate-100 rounded-lg p-1 border border-slate-200">
+                                            <button id="btn-mfd-hour-minus"
+                                                class="w-8 h-8 rounded bg-white font-black text-slate-600 active:scale-95 transition-all">-</button>
+                                            <div class="w-10 text-center font-black text-lg text-blue-700"
+                                                id="preview-mfd-hour-display" data-hour="0">00</div>
+                                            <button id="btn-mfd-hour-plus"
+                                                class="w-8 h-8 rounded bg-white font-black text-slate-600 active:scale-95 transition-all">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="w-full flex flex-col mb-2">
+                                        <div id="preview-item-name"
+                                            class="text-[2rem] font-black text-gray-800 leading-tight truncate w-full mb-3">
+                                        </div>
+                                        <div id="preview-category-text"
+                                            class="text-xl font-bold text-gray-600 text-right w-full"></div>
+                                    </div>
+                                    <div class="mt-auto w-full text-center pb-2">
+                                        <div id="preview-exd-text"
+                                            class="text-[1.7rem] font-black text-gray-800 leading-snug tracking-wide">
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="flex justify-between items-center mb-2">
-                                    <div id="preview-item-name" class="text-3xl font-black text-gray-800 leading-tight truncate max-w-[70%]"></div>
-                                    <div id="preview-category-text" class="text-lg font-bold text-gray-600 whitespace-nowrap"></div>
+                                <!-- 🟢 圖層 2：自訂標籤預覽層 (全新加入：絕對置中、與實際列印完全一致) -->
+                                <div id="preview-custom-layout"
+                                    class="hidden absolute inset-0 p-5 flex flex-col items-center justify-center bg-white transition-opacity duration-300">
+                                    <!-- text-wrap 支援自動換行與長字串切斷 -->
+                                    <div id="preview-custom-text"
+                                        class="text-3xl font-black text-gray-800 text-center whitespace-pre-wrap break-all leading-snug w-full">
+                                        請在右側輸入<br>自訂標籤內容</div>
                                 </div>
 
-                                <div class="mt-auto w-full text-center pb-2">
-                                    <div id="preview-exd-text" class="text-[1.7rem] font-black text-gray-800 leading-snug tracking-wide"></div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 區塊 B：右側設定區 (手機橫向時靠右，直向/電腦版時在下方) -->
+                <!-- 區塊 B：右側設定區 -->
                 <div class="w-full max-lg:landscape:w-[320px] flex-none flex flex-col bg-white">
-                    <div class="p-4 border-b border-t max-lg:landscape:border-t-0 border-gray-100">
+                    <div id="employee-input-container"
+                        class="p-4 border-b border-t max-lg:landscape:border-t-0 border-gray-100 transition-opacity">
                         <label class="block text-gray-500 text-xs font-bold mb-1">🧑‍🍳 當班員工</label>
-                        <input type="text" id="employee-name" placeholder="請輸入姓名..." class="w-full text-xl font-black border-2 border-gray-300 rounded-xl p-2 focus:border-blue-500 focus:outline-none text-center bg-white shadow-inner">
+                        <input type="text" id="employee-name" placeholder="請輸入姓名..."
+                            class="w-full text-xl font-black border-2 border-gray-300 rounded-xl p-2 focus:border-blue-500 focus:outline-none text-center bg-white shadow-inner">
                     </div>
 
-                    <div class="p-4">
+                    <!-- 🚨 新增：自訂標籤輸入區 (預設隱藏) -->
+                    <div id="custom-label-container" class="p-4 hidden">
+                        <label class="text-xs font-bold text-gray-500 mb-1 block">✍️ 自訂標籤內容</label>
+                        <textarea id="custom-label-input" rows="3" placeholder="請輸入標籤文字... (支援換行)"
+                            class="w-full text-lg font-bold border-2 border-gray-300 rounded-xl p-3 focus:border-blue-500 focus:outline-none resize-none bg-slate-50 shadow-inner"></textarea>
+                    </div>
+
+                    <!-- 原有：用途設定區 -->
+                    <div id="category-select-container" class="p-4">
                         <label class="text-xs font-bold text-gray-500 mb-1 block">🏷️ 用途設定</label>
-                        <select id="preview-category-select" class="w-full text-lg font-bold text-blue-700 border-2 border-blue-200 rounded-xl p-2 bg-blue-50 cursor-pointer"></select>
+                        <select id="preview-category-select"
+                            class="w-full text-lg font-bold text-blue-700 border-2 border-blue-200 rounded-xl p-2 bg-blue-50 cursor-pointer"></select>
                     </div>
                 </div>
             </div>
 
             <!-- 🚨 絕對置底：列印操作區 (使用 shrink-0 保證它絕對不會被擠壓) -->
-            <div class="shrink-0 w-full border-t border-gray-200 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),16px)] lg:pb-6 flex flex-col gap-3 bg-white z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
+            <div
+                class="shrink-0 w-full border-t border-gray-200 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),16px)] lg:pb-6 flex flex-col gap-3 bg-white z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
                 <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100">
                     <span class="text-lg font-bold text-gray-700 ml-2">張數</span>
                     <div class="flex items-center gap-2">
-                        <button id="btn-qty-minus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">-</button>
-                        <input type="number" id="print-quantity" class="w-14 h-12 text-center text-2xl font-black text-gray-800 border-2 border-slate-200 rounded-xl bg-white" value="1" min="1" max="99">
-                        <button id="btn-qty-plus" class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">+</button>
+                        <button id="btn-qty-minus"
+                            class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">-</button>
+                        <input type="number" id="print-quantity"
+                            class="w-14 h-12 text-center text-2xl font-black text-gray-800 border-2 border-slate-200 rounded-xl bg-white"
+                            value="1" min="1" max="99">
+                        <button id="btn-qty-plus"
+                            class="w-12 h-12 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold text-2xl active:bg-slate-200">+</button>
                     </div>
                 </div>
 
-                <button id="btn-print" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl h-14 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                <button id="btn-print"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl h-14 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
                     🖨️ 列印標籤
                 </button>
             </div>
