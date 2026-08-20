@@ -105,58 +105,45 @@
         <p id="global-loading-text" class="text-white text-xl font-bold tracking-widest">載入中...</p>
     </div>
 
-    <!-- 門市系統登入介面 (已包含正確的 Numpad 與 ID) -->
+   <!-- 門市系統登入介面 (修復 Flexbox 置中裁切死鎖) -->
+    <!-- 🚨 第一層 (滾動層)：拔除 flex，專職負責滿版與產生捲軸 -->
     <div id="login-view"
-        class="fixed inset-0 z-50 flex flex-col items-center justify-center min-h-screen bg-gray-100 transition-opacity duration-500">
-        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-[90%] max-w-[400px]">
-            <h2 class="text-2xl font-black text-center text-gray-800 mb-6 tracking-wider">門市系統登入</h2>
+        class="fixed inset-0 z-50 overflow-y-auto bg-gray-100 transition-opacity duration-500">
+        
+        <!-- 🚨 第二層 (對齊層)：設定最小高度滿版 (min-h-full)，確保內容過長時只會往下延伸，絕不往上切斷 -->
+        <div class="flex min-h-full items-center justify-center p-4 py-8">
+            
+            <!-- 🚨 第三層 (內容層)：純粹的卡片容器 -->
+            <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-[400px]">
+                
+                <h2 class="text-xl md:text-2xl font-black text-center text-gray-800 mb-6 tracking-wider">門市系統登入</h2>
 
-            <div id="pin-display"
-                class="w-full h-14 mb-2 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-4xl tracking-[0.5em] font-black text-slate-800 flex items-center justify-center overflow-hidden">
-                <!-- JS 動態填入密碼星號 -->
-            </div>
+                <div id="pin-display"
+                    class="w-full h-12 md:h-14 mb-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-3xl tracking-[0.5em] font-black text-slate-800 flex items-center justify-center overflow-hidden">
+                    <!-- JS 動態填入密碼星號 -->
+                </div>
 
-            <p id="login-error-msg"
-                class="text-red-500 text-center mb-4 min-h-[24px] font-semibold opacity-0 transition-opacity"></p>
+                <p id="login-error-msg"
+                    class="text-red-500 text-center mb-4 min-h-[24px] font-semibold opacity-0 transition-opacity"></p>
 
-            <div id="numpad-container" class="grid grid-cols-3 gap-3">
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="1">1</button>
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="2">2</button>
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="3">3</button>
+                <!-- 數字鍵盤 (統一按鈕高度為 py-3，在所有裝置上都能維持良好觸控熱區) -->
+                <div id="numpad-container" class="grid grid-cols-3 gap-2 md:gap-3">
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="1">1</button>
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="2">2</button>
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="3">3</button>
 
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="4">4</button>
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="5">5</button>
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="6">6</button>
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="4">4</button>
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="5">5</button>
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="6">6</button>
 
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="7">7</button>
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="8">8</button>
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="9">9</button>
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="7">7</button>
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="8">8</button>
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="9">9</button>
 
-                <button id="btn-login-clear" data-action="clear"
-                    class="numpad-btn bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 text-xl font-bold py-4 rounded-2xl shadow-sm transition-all">清除</button>
-                <button
-                    class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-3xl font-bold py-4 rounded-2xl shadow-sm transition-all"
-                    data-val="0">0</button>
-                <button id="btn-login-submit" data-action="submit"
-                    class="numpad-btn bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-all">登入</button>
+                    <button id="btn-login-clear" data-action="clear" class="numpad-btn bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 text-lg md:text-xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all">清除</button>
+                    <button class="numpad-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl md:text-3xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all" data-val="0">0</button>
+                    <button id="btn-login-submit" data-action="submit" class="numpad-btn bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-lg md:text-xl font-bold py-3 md:py-4 rounded-xl md:rounded-2xl shadow-md transition-all">登入</button>
+                </div>
             </div>
         </div>
     </div>
