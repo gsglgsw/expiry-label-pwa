@@ -394,7 +394,7 @@ export class MainController {
             const finalCommand = await printService.generateCommand(lang, printData, qty);
             await printService.sendPrintJob(targetIp, printerIp, finalCommand);
             
-            this.ui.showToast(`✅ 標籤已成功送出！`);
+            this.ui.showToast(`標籤已成功送出！`);
         } catch (error) {
             this.ui.showToast(`列印失敗: ${error.message}`, 'error');
         } finally {
