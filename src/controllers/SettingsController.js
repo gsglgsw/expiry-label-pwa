@@ -43,6 +43,7 @@ export class SettingsController {
 
         const body = el('div', 'px-5 py-4 space-y-4');
         this.storeLine = el('p', 'text-sm text-gray-600');
+        this.deviceLine = el('p', 'text-sm text-gray-600');
 
         const table = el('table', 'w-full text-sm border-collapse');
         const thead = el('thead');
@@ -66,7 +67,7 @@ export class SettingsController {
         const note = el('p', 'text-xs text-gray-400',
             '「同步 IP 設定」只更新 IP；食材資料請用主畫面的「同步」按鈕。');
 
-        body.append(this.storeLine, table, this.middlewareInfo, this.statusLine, buttons, this.testResult, note);
+        body.append(this.storeLine, this.deviceLine, table, this.middlewareInfo, this.statusLine, buttons, this.testResult, note);
         card.append(header, body);
         this.modal.appendChild(card);
         document.body.appendChild(this.modal);
@@ -79,6 +80,10 @@ export class SettingsController {
         const name = localStorage.getItem('storeName') || '';
         const id = localStorage.getItem('storeId') || '';
         this.storeLine.textContent = `門市：${name}（${id}）`;
+        this.deviceLine.replaceChildren(
+            document.createTextNode('本機設備代碼：'),
+            el('span', 'font-mono font-bold text-slate-800 tracking-wider', DeviceManager.getShortCode())
+        );
         this.remote = null;
         this.render();
         this.fetchRemote();
@@ -102,7 +107,7 @@ export class SettingsController {
         this.tbody.replaceChildren();
         FIELDS.forEach(({ key, label }) => {
             const tr = el('tr', 'border-b last:border-0');
-            const remoteVal = this.remote ? (this.remote[key] || '（未填）') : '讀取中…';
+            const remoteVal = this.remote ? (this.remote[key] || '（未填）') : (this.remoteFailed ? '—' : '讀取中…');
             const differs = this.remote && (this.remote[key] || '') !== local[key];
             if (differs) tr.classList.add('bg-amber-50');
             tr.appendChild(el('td', 'py-2 pr-2 text-gray-600', label));
@@ -142,7 +147,8 @@ export class SettingsController {
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'getStoreConfig', storeId, deviceId: DeviceManager.getDeviceId() })
+            // 與登入相同：送 6 碼設備代碼（Sheet「Table C_設備授權」存的是這個）
+            body: JSON.stringify({ action: 'getStoreConfig', storeId, deviceId: DeviceManager.getShortCode() })
         });
         if (!response.ok) throw new Error(`雲端回應異常（${response.status}）`);
         const result = await response.json();
@@ -152,6 +158,7 @@ export class SettingsController {
 
     async fetchRemote() {
         this.setStatus('正在讀取 Sheet 上的設定…');
+        this.remoteFailed = false;
         try {
             this.remote = await this.requestConfig();
             this.render();
@@ -162,8 +169,13 @@ export class SettingsController {
                 this.setStatus('這台 iPad 的設定與 Sheet 一致。', 'ok');
             }
         } catch (e) {
+            this.remoteFailed = true;
             this.render();
-            this.setStatus(`無法讀取 Sheet 設定：${e.message}`, 'err');
+            const hint = e.message.includes('未經授權')
+                ? `\n請將本機設備代碼 ${DeviceManager.getShortCode()} 加入 Sheet「Table C_設備授權」（門市名稱、設備代碼、ACTIVE）`
+                : '';
+            this.setStatus(`無法讀取 Sheet 設定：${e.message}${hint}`, 'err');
+            this.statusLine.classList.add('whitespace-pre-line');
         }
     }
 
