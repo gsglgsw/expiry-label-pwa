@@ -294,8 +294,13 @@ class PrintService {
      */
     async sendPrintJob(middlewareIp, printerIp, command) {
         const apiUrl = `https://${middlewareIp}:3000/api/print`;
+        const TIMEOUT_MS = 15000;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+        let response;
         try {
-            const response = await fetch(apiUrl, {
+            response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -304,17 +309,29 @@ class PrintService {
                 body: JSON.stringify({
                     printerIp: printerIp,
                     printCommand: command // 若為圖形模式，此時夾帶的會是 __BASE64__ 字串
-                })
+                }),
+                signal: controller.signal
             });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || '中介層發生未知錯誤');
-            }
-            return await response.json();
         } catch (error) {
-            throw error;
+            // 請求沒有送到中介電腦（第 ① 段：iPad → 中介電腦）
+            if (error.name === 'AbortError') {
+                throw new Error(`中介電腦 ${middlewareIp} 沒有回應（${TIMEOUT_MS / 1000} 秒）。請確認行政電腦有開機、網路正常`);
+            }
+            throw new Error(
+                `連不到中介電腦 ${middlewareIp}。可能原因：行政電腦沒開機或中介程式沒執行、` +
+                `iPad 連到別的 Wi-Fi、iPad 未信任憑證（可用 Safari 開 https://${middlewareIp}:3000/api/status 檢查）`
+            );
+        } finally {
+            clearTimeout(timer);
         }
+
+        // 請求有送到中介電腦；錯誤訊息由中介程式提供（第 ② 段：中介電腦 → 標籤機）
+        let data = null;
+        try { data = await response.json(); } catch (e) { /* 非 JSON 回應 */ }
+        if (!response.ok || !data || data.success === false) {
+            throw new Error((data && data.message) || `中介電腦回應異常（HTTP ${response.status}）`);
+        }
+        return data;
     }
 }
 
