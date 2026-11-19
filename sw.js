@@ -1,7 +1,7 @@
 // sw.js (Production-Ready 彈性快取架構)
 
 // 🚨 已更新版本號以強制觸發瀏覽器更新
-const CACHE_NAME = 'expiry-label-cache-v20261119-1';
+const CACHE_NAME = 'expiry-label-cache-v20261119-2';
 
 // 🚨 架構師修正：全部改為相對路徑 './'，完美適應 GitHub Pages 子目錄
 const FILES_TO_CACHE = [
@@ -15,6 +15,7 @@ const FILES_TO_CACHE = [
     './src/config.js',
     './src/controllers/LoginController.js',
     './src/controllers/MainController.js',
+    './src/controllers/SettingsController.js',
     './src/models/Database.js',
     './src/services/AuthService.js',
     './src/services/PrintService.js',

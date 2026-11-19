@@ -2,6 +2,7 @@
 
 import { printService } from '../services/PrintService.js';
 import { DateHelper } from '../utils/DateHelper.js';
+import { SettingsController } from './SettingsController.js';
 
 export class MainController {
     constructor(dbManager, uiManager) {
@@ -21,6 +22,7 @@ export class MainController {
         this.handleCategoryChange = this.handleCategoryChange.bind(this);
 
         this.bindStaticEvents();
+        this.settings = new SettingsController(this.ui); // ⚙️ 門市連線設定視窗
         this.initController();
         this.initEventListeners();
     }
