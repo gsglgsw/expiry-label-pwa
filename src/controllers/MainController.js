@@ -3,6 +3,7 @@
 import { printService } from '../services/PrintService.js';
 import { DateHelper } from '../utils/DateHelper.js';
 import { SettingsController } from './SettingsController.js';
+import { ClockGuard } from '../utils/ClockGuard.js';
 
 export class MainController {
     constructor(dbManager, uiManager) {
@@ -23,6 +24,7 @@ export class MainController {
 
         this.bindStaticEvents();
         this.settings = new SettingsController(this.ui); // ⚙️ 門市連線設定視窗
+        this.clockGuard = new ClockGuard(); // ⏰ 設備時間不正確時顯示紅色警告
         this.initController();
         this.initEventListeners();
     }
@@ -426,6 +428,7 @@ export class MainController {
             if (isSuccess) {
                 await this.initController();
                 this.ui.showToast('資料同步成功！');
+                this.clockGuard.check(); // 同步時順便檢查設備時間
             }
         } catch (error) {
             this.ui.showToast(`系統錯誤: ${error.message}`, 'error');
